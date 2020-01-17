@@ -45,6 +45,7 @@ private const val PACKAGE_NAME = "com.exmaple.blinkActivator.locationupdatesfore
 const val ACTION_BROADCAST = PACKAGE_NAME + ".broadcast"
 
 const val EXTRA_LOCATION = PACKAGE_NAME + ".location"
+const val EXTRA_LOCATION_STATE = PACKAGE_NAME + ".locationState"
 const val EXTRA_STATUS = PACKAGE_NAME + ".status"
 const val EXTRA_REGISTER_STATUS = PACKAGE_NAME + ".registyerstatus"
 const val EXTRA_STARTED_FROM_NOTIFICATION = PACKAGE_NAME + ".started_from_notification"
@@ -109,7 +110,7 @@ class LocationUpdatesService: Service(), BlinkListener {
                 onNewLocation(locationResult.lastLocation)
             }
         })
-
+        startForeground(NOTIFICATION_ID, getStatusUpdateNotification(BlinkArmState.UNKNOWN))
        requestLocation()
 
         val handlerThread = HandlerThread(LOG_TAG)
@@ -127,14 +128,7 @@ class LocationUpdatesService: Service(), BlinkListener {
             mNotificationManager.createNotificationChannel(channel);
         }
 
-        if (blinkAutomator == null) {
-            blinkRequestHandler = BlinkRequestHandler(
-                credentials = makeCredentials(),
-                listener = this)
-
-            blinkAutomator = BlinkAutomator(blinkRequestHandler!!)
-            blinkAutomator!!.start()
-        }
+        startBlink()
 
     }
 
@@ -163,7 +157,7 @@ class LocationUpdatesService: Service(), BlinkListener {
         // and binds with this service. The service should cease to be a foreground service
         // when that happens.
         Log.i(LOG_TAG, "in onBind()")
-        stopForeground(true)
+       // stopForeground(true)
         mChangingConfiguration = false
         return mBinder
     }
@@ -173,7 +167,7 @@ class LocationUpdatesService: Service(), BlinkListener {
         // and binds once again with this service. The service should cease to be a foreground
         // service when that happens.
         Log.i(LOG_TAG, "in onRebind()")
-        stopForeground(true)
+       // stopForeground(true)
         mChangingConfiguration = false
         super.onRebind(intent)
     }
@@ -184,18 +178,18 @@ class LocationUpdatesService: Service(), BlinkListener {
         // Called when the last client (MainActivity in case of this sample) unbinds from this
         // service. If this method is called due to a configuration change in MainActivity, we
         // do nothing. Otherwise, we make this service a foreground service.
-        if (!mChangingConfiguration && requestingLocationUpdates(this)) {
-            Log.i(LOG_TAG, "Starting foreground service")
+       // if (!mChangingConfiguration && requestingLocationUpdates(this)) {
+        //    Log.i(LOG_TAG, "Starting foreground service")
 
-            //startForeground(NOTIFICATION_ID, getNotification())
-        }
+       //     startForeground(NOTIFICATION_ID, getStatusUpdateNotification(BlinkArmState.UNKNOWN))
+        //}
         return true // Ensures onRebind() is called when a client re-binds.
     }
 
     override fun onDestroy() {
         Log.i(LOG_TAG, "Service onDestroy")
         mServiceHandler.removeCallbacksAndMessages(null)
-        blinkRequestHandler?.quit()
+
     }
 
     override fun onStatusRefresh(state: BlinkArmState) {
@@ -204,9 +198,9 @@ class LocationUpdatesService: Service(), BlinkListener {
         LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent)
 
         // Update notification content if running as a foreground service.
-        if (serviceIsRunningInForeground(this)) {
+        //if (serviceIsRunningInForeground(this)) {
             mNotificationManager.notify(NOTIFICATION_ID, getStatusUpdateNotification(state));
-        }
+        //}
 
     }
 
@@ -220,6 +214,27 @@ class LocationUpdatesService: Service(), BlinkListener {
         //    mNotificationManager.notify(NOTIFICATION_ID, getConnectedToBlinkNotification());
        // }
     }
+
+    fun stopBlink() {
+        Log.i(LOG_TAG, "stop blink!")
+        stopSelf()
+        blinkAutomator?.quit()
+        blinkAutomator = null
+    }
+
+    fun startBlink() {
+        if (blinkAutomator == null) {
+            Log.i(LOG_TAG, "start blink!")
+            blinkRequestHandler = BlinkRequestHandler(
+                credentials = makeCredentials(),
+                listener = this)
+
+            blinkAutomator = BlinkAutomator(blinkRequestHandler!!)
+            blinkAutomator!!.start()
+        }
+    }
+
+    fun hasBlink(): Boolean = blinkAutomator != null
 
     fun refreshBlinkState() {
         blinkRequestHandler?.requestBlinkStatusRefresh()
@@ -296,7 +311,7 @@ class LocationUpdatesService: Service(), BlinkListener {
                 PendingIntent.FLAG_UPDATE_CURRENT)
 
         // The PendingIntent to launch activity.
-       val activityPendingIntent = PendingIntent.getActivity(this, 0,
+       val pendingIntent = PendingIntent.getActivity(this, 0,
             Intent(this, MapsActivity::class.java), 0)
 
         val builder = NotificationCompat.Builder(this)
@@ -311,6 +326,9 @@ class LocationUpdatesService: Service(), BlinkListener {
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setTicker(text)
                 .setWhen(System.currentTimeMillis())
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true)
+
 
         // Set the Channel ID for Android O.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -328,7 +346,15 @@ class LocationUpdatesService: Service(), BlinkListener {
         if (blinkRequestHandler != null) blinkRequestHandler!!.newLocation(location)
         // Notify anyone listening for broadcasts about the new location.
         val intent = Intent(ACTION_BROADCAST)
+        var locString = "Unknown"
+        if (blinkRequestHandler!!.getLastLocationState() == LocationStateTracker.LocationState.OUT) {
+            locString = "Out"
+        } else if (blinkRequestHandler!!.getLastLocationState() == LocationStateTracker.LocationState.AT_HOME)
+        {
+            locString = "At Home"
+        }
         intent.putExtra(EXTRA_LOCATION, location)
+        intent.putExtra(EXTRA_LOCATION_STATE, locString)
         LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent)
 
         // Update notification content if running as a foreground service.

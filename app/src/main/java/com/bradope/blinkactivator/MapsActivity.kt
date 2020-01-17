@@ -21,6 +21,10 @@ import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
+import kotlinx.android.synthetic.main.activity_maps.*
+import kotlinx.coroutines.delay
+import kotlin.concurrent.thread
+import kotlin.math.sqrt
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.OnSharedPreferenceChangeListener {
 
@@ -44,7 +48,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
     private lateinit var mServiceConnection: ServiceConnection
 
     private var homeLocation = LatLng(51.083008, 1.161534)
-    private var homeSize = 40.0
+    private var homeSize = 180.0
     private var marker: Marker? = null
     private var myLocation: LatLng? = null
 
@@ -58,25 +62,33 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         mapFragment.getMapAsync(this)
 
         myReceiver = MyReceiver(this)
-        if (requestingLocationUpdates(this)) {
-            if (!checkPermissions()) {
-                requestPermissions();
-            }
-        }
 
         // Monitors the state of the connection to the service.
          mServiceConnection = object : ServiceConnection {
             override fun onServiceConnected(name: ComponentName, service: IBinder) {
                 Log.i(LOG_TAG, "onServiceConnected")
                 val binder = service as LocalBinder
+                val hadService = mService != null
                 mService = binder.getService()
+
+
+               // Thread.sleep(1000)
+                if (!checkPermissions()) {
+                    requestPermissions()
+                }
+                //Thread.sleep(1000)
+                if (!hadService)
+                    mService!!.requestLocationUpdates()
+                mService!!.refreshBlinkState()
+
+
                 mBound = true
             }
 
             override fun onServiceDisconnected(name: ComponentName) {
                 Log.i(LOG_TAG, "onServiceDisconnected")
-                mService = null
-                mBound = false
+               // mService = null
+              //  mBound = false
             }
         }
 
@@ -130,6 +142,29 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
                 mMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
             }
         }
+        val startStopButton = findViewById<Button>(R.id.startStop)
+        if (mService != null) {
+            if (mService!!.hasBlink()) {
+                startStopButton.text = "Stop Blink"
+            } else {
+                startStopButton.text = "Start Blink"
+            }
+        }
+        startStopButton.setOnClickListener {
+            if (mService != null) {
+                if (mService!!.hasBlink()) {
+                    mService!!.stopBlink()
+                    finish()
+                } else {
+                    bindService(
+                        Intent(this, LocationUpdatesService::class.java), mServiceConnection,
+                        Context.BIND_AUTO_CREATE
+                    )
+                    //mService!!.startBlink()
+                    startStopButton.text = "Stop Blink"
+                }
+            }
+        }
        /* mRemoveLocationUpdatesButton.setOnClickListener(object : OnClickListener() {
             fun onClick(view: View?) {
                 mService!!.removeLocationUpdates()
@@ -137,8 +172,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         })*/
         // Restore the state of the buttons when the activity (re)launches.
         setButtonsState(requestingLocationUpdates(this))
-        // Bind to the service. If the service is in foreground mode, this signals to the service
-// that since this activity is in the foreground, the service can exit foreground mode.
+
         bindService(
             Intent(this, LocationUpdatesService::class.java), mServiceConnection,
             Context.BIND_AUTO_CREATE
@@ -268,6 +302,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
      */
     private class MyReceiver(activity: MapsActivity) : BroadcastReceiver() {
         val self  = activity
+
+        private val homeLocation = LatLng(51.083008, 1.161534)
+
+        fun distToHome(location: Location): Double{
+            val lat = location.latitude - homeLocation.latitude
+            val lon = location.longitude - homeLocation.longitude
+            val distSquared = (lat*lat) + (lon*lon)
+            return sqrt(distSquared) * 1000
+
+        }
+        fun Double.format(digits: Int) = "%.${digits}f".format(this)
         override fun onReceive(context: Context?, intent: Intent) {
             val location =
                 intent.getParcelableExtra<Location>(EXTRA_LOCATION)
@@ -281,6 +326,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
 
                 self.marker?.remove()
                 self.marker = self.mMap.addMarker(options)
+
+
+                val locState = self.findViewById<TextView>(R.id.locState)
+                var d = distToHome(location)
+                if (d == 0.0) d = 0.00001
+                val dist = "${d.format(2)}"
+                var loc = intent.getStringExtra(EXTRA_LOCATION_STATE)
+
+                locState.text = "$loc $dist"
+
             }
             val reg =intent.getBooleanExtra(EXTRA_REGISTER_STATUS, false)
 

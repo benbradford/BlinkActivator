@@ -74,7 +74,7 @@ class BackOffFactory {
 }
 
 const val BLINK_RENEW_SESSION_INTERVAL_IN_SECONDS = 60 * 60L
-const val BLINK_REFRESH_STATUS_INTERVAL_IN_SECONDS = 60 * 10L
+const val BLINK_REFRESH_STATUS_INTERVAL_IN_SECONDS = 60 * 1L
 
 class BlinkAutomator(
     val handler: BlinkRequestHandler,
@@ -138,19 +138,20 @@ class BlinkRequestHandler(
 
     private var lastKnownBlinkArmState = BlinkArmState.UNKNOWN
     private var lastKnownLocationState = LocationStateTracker.LocationState.UNKNOWN
+    private var lastSentBlinkState = BlinkArmState.UNKNOWN
 
     private val quitRequested = AtomicBoolean(false)
     private val refreshRequested = AtomicBoolean(false)
-    private val quitCompleted = AtomicBoolean(false)
-
 
     @SuppressLint("NewApi")
     private val requestQueue = ConcurrentLinkedDeque<Request>()
 
+    fun getLastLocationState() = lastKnownLocationState
+
     fun begin() {
         createNewBlinkApiSession()
         if (refreshArmState())
-            listener?.onStatusRefresh(lastKnownBlinkArmState)
+            notifyNewBlinkState()
     }
 
     fun newLocation(latestLocation: Location) {
@@ -192,11 +193,18 @@ class BlinkRequestHandler(
                 }
                 RequestType.REFRESH_STATUS -> {
                     refreshArmState()
-                    listener?.onStatusRefresh(lastKnownBlinkArmState)
+                    notifyNewBlinkState()
                 }
             }
         }
 
+    }
+
+    private fun notifyNewBlinkState() {
+        if (lastSentBlinkState != lastKnownBlinkArmState) {
+            lastSentBlinkState = lastKnownBlinkArmState
+            listener?.onStatusRefresh(lastKnownBlinkArmState)
+        }
     }
 
     private fun createNewBlinkApiSession(lastWaitTime: Long = 1L): Boolean {
@@ -232,7 +240,7 @@ class BlinkRequestHandler(
         Log.i(LOG_TAG, "going home - attempting disarm")
         if (blinkApi.disarm()) {
             lastKnownBlinkArmState = BlinkArmState.DISARMED
-            listener?.onStatusRefresh(lastKnownBlinkArmState) // :TODO: why is this not working?
+            notifyNewBlinkState()
             return true
         }
         if (attempts < 3)
@@ -244,7 +252,7 @@ class BlinkRequestHandler(
 
         if (blinkApi.arm()) {
             lastKnownBlinkArmState = BlinkArmState.ARMED
-            listener?.onStatusRefresh(lastKnownBlinkArmState)
+            notifyNewBlinkState()
             return true
         }
         if (attempts < 3)
