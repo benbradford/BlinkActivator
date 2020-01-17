@@ -44,8 +44,8 @@ class BlinkApiTest {
         MockKAnnotations.init(this)
         every {credentials.email}.returns (encryptedEmail)
         every {credentials.pass}.returns (encryptedPassword)
-        every { decrypter.decrypt(encryptedEmail)}.returns (email)
-        every { decrypter.decrypt(encryptedPassword)}.returns(password)
+        every { decrypter.decryptValue(encryptedEmail)}.returns (email)
+        every { decrypter.decryptValue(encryptedPassword)}.returns(password)
     }
 
     @Test

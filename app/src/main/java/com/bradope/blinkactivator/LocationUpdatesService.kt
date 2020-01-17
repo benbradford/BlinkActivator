@@ -187,7 +187,7 @@ class LocationUpdatesService: Service(), BlinkListener {
         if (!mChangingConfiguration && requestingLocationUpdates(this)) {
             Log.i(LOG_TAG, "Starting foreground service")
 
-            startForeground(NOTIFICATION_ID, getNotification())
+            //startForeground(NOTIFICATION_ID, getNotification())
         }
         return true // Ensures onRebind() is called when a client re-binds.
     }
@@ -205,7 +205,7 @@ class LocationUpdatesService: Service(), BlinkListener {
 
         // Update notification content if running as a foreground service.
         if (serviceIsRunningInForeground(this)) {
-            mNotificationManager.notify(NOTIFICATION_ID, getNotification());
+            mNotificationManager.notify(NOTIFICATION_ID, getStatusUpdateNotification(state));
         }
 
     }
@@ -216,9 +216,9 @@ class LocationUpdatesService: Service(), BlinkListener {
         LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent)
 
         // Update notification content if running as a foreground service.
-        if (serviceIsRunningInForeground(this)) {
-            mNotificationManager.notify(NOTIFICATION_ID, getNotification());
-        }
+        //if (serviceIsRunningInForeground(this)) {
+        //    mNotificationManager.notify(NOTIFICATION_ID, getConnectedToBlinkNotification());
+       // }
     }
 
     fun refreshBlinkState() {
@@ -282,12 +282,11 @@ class LocationUpdatesService: Service(), BlinkListener {
     /**
      * Returns the {@link NotificationCompat} used as part of the foreground service.
      */
-    private fun getNotification(): Notification {
+    private fun getStatusUpdateNotification(state: BlinkArmState): Notification {
         val intent = Intent(this, LocationUpdatesService::class.java)
 
         // :TODO: oneline this:
-        var text = "Unknown Location"
-        if (mLocation != null ) text = getLocationText(mLocation!!)
+        var text = "Blink Status Change: $state"
 
         // Extra to help us figure out if we arrived in onStartCommand via the notification or not.
         intent.putExtra(EXTRA_STARTED_FROM_NOTIFICATION, true)
@@ -333,9 +332,9 @@ class LocationUpdatesService: Service(), BlinkListener {
         LocalBroadcastManager.getInstance(applicationContext).sendBroadcast(intent)
 
         // Update notification content if running as a foreground service.
-        if (serviceIsRunningInForeground(this)) {
-            mNotificationManager.notify(NOTIFICATION_ID, getNotification());
-        }
+        //if (serviceIsRunningInForeground(this)) {
+       //     mNotificationManager.notify(NOTIFICATION_ID, getNotification());
+        //}
     }
 
     /**

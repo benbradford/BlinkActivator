@@ -30,7 +30,7 @@ class BlinkRequestHandlerTest {
         var listener = mockk<BlinkListener>(relaxed = true)
 
         // when
-        BlinkRequestHandler(credentials = credentials, blinkApi = api, tracker = tracker, listener = listener )
+        BlinkRequestHandler(credentials = credentials, blinkApi = api, tracker = tracker, listener = listener ).begin()
 
         // then
         verify { listener.onRegister(true) }
@@ -49,6 +49,7 @@ class BlinkRequestHandlerTest {
 
         // when
         val automator = BlinkRequestHandler(credentials = credentials, blinkApi = api, tracker = tracker, listener = listener)
+        automator.begin()
         automator.newLocation(location)
 
         automator.pollRequestQueue()
@@ -69,6 +70,7 @@ class BlinkRequestHandlerTest {
 
         // when
         val automator = BlinkRequestHandler(credentials = credentials, blinkApi = api, tracker = tracker, listener = listener)
+        automator.begin()
         automator.newLocation(location)
 
         automator.pollRequestQueue()
@@ -91,7 +93,7 @@ class BlinkRequestHandlerTest {
 
         // when
         val automator = BlinkRequestHandler(credentials = credentials, blinkApi = api, tracker = tracker, listener = listener)
-
+        automator.begin()
         automator.newLocation(location)
         automator.newLocation(location)
         automator.newLocation(location)
@@ -115,7 +117,7 @@ class BlinkRequestHandlerTest {
 
         // when
         val automator = BlinkRequestHandler(credentials = credentials, blinkApi = api, tracker = tracker, listener = listener)
-
+        automator.begin()
         automator.newLocation(location)
         automator.pollRequestQueue()
 
@@ -136,7 +138,7 @@ class BlinkRequestHandlerTest {
 
         // when
         val automator = BlinkRequestHandler(credentials = credentials, blinkApi = api, tracker = tracker, listener = listener)
-
+        automator.begin()
         automator.newLocation(location)
         automator.pollRequestQueue()
 
