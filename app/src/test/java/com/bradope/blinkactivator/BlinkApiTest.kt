@@ -1,9 +1,9 @@
 package com.bradope.blinkactivator
 
+import com.bradope.blinkactivator.blink.*
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
 import junit.framework.Assert.*
-import org.json.JSONObject
 import org.junit.Before
 import org.junit.Test
 
@@ -19,7 +19,7 @@ class BlinkApiTest {
     val armStateUrl = "https://rest.prde.immedia-semi.com/homescreen"
     val armUrl = "https://rest.prde.immedia-semi.com/network/$networks/arm"
     val disarmUrl = "https://rest.prde.immedia-semi.com/network/$networks/disarm"
-    val commandStatusUrl = "https://rest.prod.immedia-semi.com/network/$networks/command/$statusId"
+    val commandStatusUrl = "https://rest.prde.immedia-semi.com/network/$networks/command/$statusId"
 
     @MockK
     lateinit var getter: HttpGetter
@@ -267,7 +267,7 @@ class BlinkApiTest {
         return response
     }
 
-    private fun createSuccessfulArmResponse(): HttpResponse  {
+    private fun createSuccessfulArmResponse(): HttpResponse {
         val armResponse = mockk<HttpResponse>()
         every {armResponse.statusCode}.returns(200)
         every {responseReader.statusId(armResponse)}.returns(statusId)
@@ -275,7 +275,7 @@ class BlinkApiTest {
         return armResponse
     }
 
-    private fun createSuccessfulDisarmResponse(): HttpResponse  {
+    private fun createSuccessfulDisarmResponse(): HttpResponse {
         val disarmResponse = mockk<HttpResponse>()
         every {disarmResponse.statusCode}.returns(200)
         every {responseReader.statusId(disarmResponse)}.returns(statusId)

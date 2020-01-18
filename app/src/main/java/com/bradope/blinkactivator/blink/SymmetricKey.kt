@@ -1,4 +1,4 @@
-package com.bradope.blinkactivator
+package com.bradope.blinkactivator.blink
 
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties

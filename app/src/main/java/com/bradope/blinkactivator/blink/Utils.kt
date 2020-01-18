@@ -1,4 +1,4 @@
-package com.bradope.blinkactivator
+package com.bradope.blinkactivator.blink
 
 /**
  * Copyright 2017 Google Inc. All Rights Reserved.
