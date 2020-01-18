@@ -1,13 +1,11 @@
-package com.bradope.blinkactivator
+package com.bradope.blinkactivator.blink
 
 import android.annotation.SuppressLint
 import android.location.Location
 import android.util.Log
 import com.google.android.gms.maps.model.LatLng
 import java.util.concurrent.ConcurrentLinkedDeque
-import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.concurrent.thread
 import kotlin.math.sqrt
 
@@ -24,7 +22,7 @@ open class LocationStateTracker {
         UNKNOWN
     }
 
-    private val atHomeTolerance = 0.001783 // about 180 meters
+    private val atHomeTolerance = 0.001583 // about 160 meters
     private val homeLocation = LatLng(51.083008, 1.161534)
 
     fun getLocationStateForLocation(location: Location): LocationState {
@@ -70,7 +68,12 @@ open class BackOff(val quitRequested: AtomicBoolean, val refreshRequested: Atomi
 
 class BackOffFactory {
     private val MAX_WAIT_TIME_IN_SECONDS = 20L
-    fun makeBackOff(quitRequested: AtomicBoolean, refreshRequested: AtomicBoolean, maxWaitTimeInSeconds: Long = MAX_WAIT_TIME_IN_SECONDS) = BackOff(quitRequested, refreshRequested, maxWaitTimeInSeconds)
+    fun makeBackOff(quitRequested: AtomicBoolean, refreshRequested: AtomicBoolean, maxWaitTimeInSeconds: Long = MAX_WAIT_TIME_IN_SECONDS) =
+        BackOff(
+            quitRequested,
+            refreshRequested,
+            maxWaitTimeInSeconds
+        )
 }
 
 const val BLINK_RENEW_SESSION_INTERVAL_IN_SECONDS = 60 * 60L
@@ -79,7 +82,8 @@ const val BLINK_REFRESH_STATUS_INTERVAL_IN_SECONDS = 60 * 1L
 class BlinkAutomator(
     val handler: BlinkRequestHandler,
     val renewSessionPeriodInSeconds: Long = BLINK_RENEW_SESSION_INTERVAL_IN_SECONDS,
-    val refreshStatusPeriodInSeconds: Long = BLINK_REFRESH_STATUS_INTERVAL_IN_SECONDS) {
+    val refreshStatusPeriodInSeconds: Long = BLINK_REFRESH_STATUS_INTERVAL_IN_SECONDS
+) {
 
     private val quitRequested = AtomicBoolean(false)
 
@@ -124,7 +128,7 @@ class BlinkRequestHandler(
     val blinkApi: BlinkApi = BlinkApi(),
     val tracker: LocationStateTracker = LocationStateTracker(),
     val backOffFactory: BackOffFactory = BackOffFactory(),
-    val listener: BlinkListener?) {
+    var listener: BlinkListener? = null) {
 
     private val LOG_TAG = "bradope_log " + BlinkRequestHandler::class.java.simpleName
 
@@ -137,8 +141,9 @@ class BlinkRequestHandler(
     data class Request(val type: RequestType, val data: Any?)
 
     private var lastKnownBlinkArmState = BlinkArmState.UNKNOWN
-    private var lastKnownLocationState = LocationStateTracker.LocationState.UNKNOWN
-    private var lastSentBlinkState = BlinkArmState.UNKNOWN
+    private var lastKnownLocationState =
+        LocationStateTracker.LocationState.UNKNOWN
+    private var lastLocation: Location? = null
 
     private val quitRequested = AtomicBoolean(false)
     private val refreshRequested = AtomicBoolean(false)
@@ -147,6 +152,8 @@ class BlinkRequestHandler(
     private val requestQueue = ConcurrentLinkedDeque<Request>()
 
     fun getLastLocationState() = lastKnownLocationState
+    fun getLastLocation() = lastLocation
+    fun getLastBlinkState() = lastKnownBlinkArmState
 
     fun begin() {
         createNewBlinkApiSession()
@@ -155,15 +162,30 @@ class BlinkRequestHandler(
     }
 
     fun newLocation(latestLocation: Location) {
-        requestQueue.offer(Request(RequestType.NEW_LOCATION, latestLocation))
+        requestQueue.offer(
+            Request(
+                RequestType.NEW_LOCATION,
+                latestLocation
+            )
+        )
     }
 
     fun requestRenewSession() {
-        requestQueue.offer(Request(RequestType.RENEW_AUTH, null))
+        requestQueue.offer(
+            Request(
+                RequestType.RENEW_AUTH,
+                null
+            )
+        )
     }
 
     fun requestRefreshStatus() {
-        requestQueue.offer(Request(RequestType.REFRESH_STATUS, null))
+        requestQueue.offer(
+            Request(
+                RequestType.REFRESH_STATUS,
+                null
+            )
+        )
     }
 
     fun quit() {
@@ -174,8 +196,14 @@ class BlinkRequestHandler(
 
     fun requestBlinkStatusRefresh() {
         requestQueue.clear()
-        lastKnownLocationState = LocationStateTracker.LocationState.UNKNOWN
-        requestQueue.offer(Request(RequestType.REFRESH_STATUS, null))
+        lastKnownLocationState =
+            LocationStateTracker.LocationState.UNKNOWN
+        requestQueue.offer(
+            Request(
+                RequestType.REFRESH_STATUS,
+                null
+            )
+        )
     }
 
     fun pollRequestQueue() {
@@ -201,10 +229,7 @@ class BlinkRequestHandler(
     }
 
     private fun notifyNewBlinkState() {
-        if (lastSentBlinkState != lastKnownBlinkArmState) {
-            lastSentBlinkState = lastKnownBlinkArmState
-            listener?.onStatusRefresh(lastKnownBlinkArmState)
-        }
+        listener?.onStatusRefresh(lastKnownBlinkArmState)
     }
 
     private fun createNewBlinkApiSession(lastWaitTime: Long = 1L): Boolean {
@@ -222,18 +247,20 @@ class BlinkRequestHandler(
     }
 
     private fun onNewLocation(latestLocation: Location): LocationStateTracker.LocationState {
-        Log.i(LOG_TAG, "evaluating latestLocation $latestLocation")
+        lastLocation = latestLocation
         val latestLocationState = tracker.getLocationStateForLocation(latestLocation)
 
-        if (lastKnownLocationState == LocationStateTracker.LocationState.UNKNOWN || latestLocationState != lastKnownLocationState) {
-            if (latestLocationState == LocationStateTracker.LocationState.AT_HOME && lastKnownBlinkArmState != BlinkArmState.DISARMED) {
-                arriveAtHome()
-            } else if (latestLocationState == LocationStateTracker.LocationState.OUT && lastKnownBlinkArmState != BlinkArmState.ARMED) {
-                leaveHome()
-            }
-        }
+        lookForRequiredArmOperation(latestLocationState)
 
         return latestLocationState
+    }
+
+    private fun lookForRequiredArmOperation(latestLocationState: LocationStateTracker.LocationState) {
+        if (latestLocationState == LocationStateTracker.LocationState.AT_HOME && lastKnownBlinkArmState == BlinkArmState.ARMED) {
+            arriveAtHome()
+        } else if (latestLocationState == LocationStateTracker.LocationState.OUT && lastKnownBlinkArmState == BlinkArmState.DISARMED) {
+            leaveHome()
+        }
     }
 
     private fun arriveAtHome(attempts: Int = 0): Boolean {
@@ -283,6 +310,7 @@ class BlinkRequestHandler(
             return withBackOff(::refreshArmState, lastWaitTime)
         }
 
+        lookForRequiredArmOperation(lastKnownLocationState)
         return true
     }
 

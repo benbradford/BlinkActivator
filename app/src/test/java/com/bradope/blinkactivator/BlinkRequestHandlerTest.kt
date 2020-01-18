@@ -1,6 +1,7 @@
 package com.bradope.blinkactivator
 
 import android.location.Location
+import com.bradope.blinkactivator.blink.*
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
 import org.junit.Before
@@ -30,7 +31,12 @@ class BlinkRequestHandlerTest {
         var listener = mockk<BlinkListener>(relaxed = true)
 
         // when
-        BlinkRequestHandler(credentials = credentials, blinkApi = api, tracker = tracker, listener = listener ).begin()
+        BlinkRequestHandler(
+            credentials = credentials,
+            blinkApi = api,
+            tracker = tracker,
+            listener = listener
+        ).begin()
 
         // then
         verify { listener.onRegister(true) }
@@ -48,7 +54,12 @@ class BlinkRequestHandlerTest {
         every { tracker.getLocationStateForLocation( location) } returns LocationStateTracker.LocationState.OUT
 
         // when
-        val automator = BlinkRequestHandler(credentials = credentials, blinkApi = api, tracker = tracker, listener = listener)
+        val automator = BlinkRequestHandler(
+            credentials = credentials,
+            blinkApi = api,
+            tracker = tracker,
+            listener = listener
+        )
         automator.begin()
         automator.newLocation(location)
 
@@ -69,7 +80,12 @@ class BlinkRequestHandlerTest {
         every { tracker.getLocationStateForLocation( location) } returns LocationStateTracker.LocationState.AT_HOME
 
         // when
-        val automator = BlinkRequestHandler(credentials = credentials, blinkApi = api, tracker = tracker, listener = listener)
+        val automator = BlinkRequestHandler(
+            credentials = credentials,
+            blinkApi = api,
+            tracker = tracker,
+            listener = listener
+        )
         automator.begin()
         automator.newLocation(location)
 
@@ -92,7 +108,12 @@ class BlinkRequestHandlerTest {
         every { tracker.getLocationStateForLocation( location) } returns LocationStateTracker.LocationState.AT_HOME andThen LocationStateTracker.LocationState.OUT andThen LocationStateTracker.LocationState.AT_HOME
 
         // when
-        val automator = BlinkRequestHandler(credentials = credentials, blinkApi = api, tracker = tracker, listener = listener)
+        val automator = BlinkRequestHandler(
+            credentials = credentials,
+            blinkApi = api,
+            tracker = tracker,
+            listener = listener
+        )
         automator.begin()
         automator.newLocation(location)
         automator.newLocation(location)
@@ -116,7 +137,12 @@ class BlinkRequestHandlerTest {
         every { tracker.getLocationStateForLocation( location) } returns LocationStateTracker.LocationState.OUT
 
         // when
-        val automator = BlinkRequestHandler(credentials = credentials, blinkApi = api, tracker = tracker, listener = listener)
+        val automator = BlinkRequestHandler(
+            credentials = credentials,
+            blinkApi = api,
+            tracker = tracker,
+            listener = listener
+        )
         automator.begin()
         automator.newLocation(location)
         automator.pollRequestQueue()
@@ -137,7 +163,12 @@ class BlinkRequestHandlerTest {
         every { tracker.getLocationStateForLocation( location) } returns LocationStateTracker.LocationState.OUT
 
         // when
-        val automator = BlinkRequestHandler(credentials = credentials, blinkApi = api, tracker = tracker, listener = listener)
+        val automator = BlinkRequestHandler(
+            credentials = credentials,
+            blinkApi = api,
+            tracker = tracker,
+            listener = listener
+        )
         automator.begin()
         automator.newLocation(location)
         automator.pollRequestQueue()

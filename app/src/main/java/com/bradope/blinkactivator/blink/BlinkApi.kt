@@ -1,4 +1,4 @@
-package com.bradope.blinkactivator
+package com.bradope.blinkactivator.blink
 
 import android.util.Log
 import org.json.JSONArray
@@ -21,7 +21,7 @@ interface HttpResponseReader {
     fun commandCompletionStatus(response: HttpResponse): String
 }
 
-class DefaultHttpResponseReader: HttpResponseReader{
+class DefaultHttpResponseReader: HttpResponseReader {
     override fun authToken(response: HttpResponse): String = (response.jsonObject["authtoken"] as JSONObject)["authtoken"] as String
     override fun networks(response: HttpResponse): String = (response.jsonObject["networks"] as JSONObject).keys().next()
     override fun armState(response: HttpResponse): String = ((response.jsonObject["devices"] as JSONArray)[0] as JSONObject)["active"] as String
@@ -39,7 +39,9 @@ interface CredentialsDecrypter {
 }
 
 class DefaultCredentialsDecrypter: CredentialsDecrypter {
-    override fun decryptValue(encryptedValue: EncryptedValue): String = decrypt(encryptedValue)!!
+    override fun decryptValue(encryptedValue: EncryptedValue): String = decrypt(
+        encryptedValue
+    )!!
 }
 
 class KHttpGetter: HttpGetter {
@@ -51,7 +53,10 @@ class KHttpGetter: HttpGetter {
     ): HttpResponse {
         val response = khttp.get(url=url, headers=headers, data=data, timeout=timeout)
         if (response.statusCode == 200)
-            return HttpResponse(response.statusCode, response.jsonObject)
+            return HttpResponse(
+                response.statusCode,
+                response.jsonObject
+            )
         return HttpResponse(response.statusCode, JSONObject())
     }
 }
@@ -59,7 +64,8 @@ class KHttpGetter: HttpGetter {
 open class BlinkApi(
     val httpGetter: HttpGetter = KHttpGetter(),
     val httpResponseReader: HttpResponseReader = DefaultHttpResponseReader(),
-    val decrypter: CredentialsDecrypter = DefaultCredentialsDecrypter())
+    val decrypter: CredentialsDecrypter = DefaultCredentialsDecrypter()
+)
 {
     data class BlinkApiSession(val token: String, val network: String, val credentials: Credentials)
 
@@ -83,7 +89,7 @@ open class BlinkApi(
 
             if (res.statusCode == 200) {
                 currentSession = BlinkApiSession(
-                    token = httpResponseReader.authToken(res) ,
+                    token = httpResponseReader.authToken(res),
                     network = httpResponseReader.networks(res),
                     credentials = credentials
                 )

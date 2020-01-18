@@ -15,15 +15,14 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
-import com.bradope.blinkactivator.LocationUpdatesService.LocalBinder
+import com.bradope.blinkactivator.OldLocationUpdatesService.LocalBinder
+import com.bradope.blinkactivator.blink.KEY_REQUESTING_LOCATION_UPDATES
+import com.bradope.blinkactivator.blink.requestingLocationUpdates
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
-import kotlinx.android.synthetic.main.activity_maps.*
-import kotlinx.coroutines.delay
-import kotlin.concurrent.thread
 import kotlin.math.sqrt
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.OnSharedPreferenceChangeListener {
@@ -39,7 +38,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
     private lateinit var myReceiver: MyReceiver
 
     // A reference to the service used to get location updates.
-    private var mService: LocationUpdatesService? = null
+    private var mService: OldLocationUpdatesService? = null
 
     // Tracks the bound state of the service.
     private var mBound = false
@@ -143,7 +142,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
             }
         }
         val startStopButton = findViewById<Button>(R.id.startStop)
-        if (mService != null) {
+        /*if (mService != null) {
             if (mService!!.hasBlink()) {
                 startStopButton.text = "Stop Blink"
             } else {
@@ -157,14 +156,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
                     finish()
                 } else {
                     bindService(
-                        Intent(this, LocationUpdatesService::class.java), mServiceConnection,
+                        Intent(this, OldLocationUpdatesService::class.java), mServiceConnection,
                         Context.BIND_AUTO_CREATE
                     )
                     //mService!!.startBlink()
                     startStopButton.text = "Stop Blink"
                 }
             }
-        }
+        }*/
        /* mRemoveLocationUpdatesButton.setOnClickListener(object : OnClickListener() {
             fun onClick(view: View?) {
                 mService!!.removeLocationUpdates()
@@ -174,7 +173,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
         setButtonsState(requestingLocationUpdates(this))
 
         bindService(
-            Intent(this, LocationUpdatesService::class.java), mServiceConnection,
+            Intent(this, OldLocationUpdatesService::class.java), mServiceConnection,
             Context.BIND_AUTO_CREATE
         )
     }
@@ -298,7 +297,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, SharedPreferences.
     }
 
     /**
-     * Receiver for broadcasts sent by [LocationUpdatesService].
+     * Receiver for broadcasts sent by [OldLocationUpdatesService].
      */
     private class MyReceiver(activity: MapsActivity) : BroadcastReceiver() {
         val self  = activity

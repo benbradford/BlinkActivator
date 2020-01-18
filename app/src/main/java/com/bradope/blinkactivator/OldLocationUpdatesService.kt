@@ -19,6 +19,7 @@ import android.os.Looper;
 import androidx.core.app.NotificationCompat
 import android.util.Log;
 import androidx.localbroadcastmanager.content.LocalBroadcastManager
+import com.bradope.blinkactivator.blink.*
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -53,9 +54,9 @@ const val EXTRA_STARTED_FROM_NOTIFICATION = PACKAGE_NAME + ".started_from_notifi
 private var blinkRequestHandler: BlinkRequestHandler? = null
 private var blinkAutomator: BlinkAutomator? = null
 
-class LocationUpdatesService: Service(), BlinkListener {
+class OldLocationUpdatesService: Service(), BlinkListener {
 
-    private val LOG_TAG =  "bradope_log " + LocationUpdatesService::class.java.simpleName
+    private val LOG_TAG =  "bradope_log " + OldLocationUpdatesService::class.java.simpleName
 
     private val NOTIFICATION_CHANNEL_ID = "channel_01"
     private val UPDATE_INTERVAL_IN_MILLISECONDS = 10000L
@@ -138,10 +139,10 @@ class LocationUpdatesService: Service(), BlinkListener {
                 false)
 
         // We got here because the user decided to remove location updates from the notification.
-        if (startedFromNotification) {
-            removeLocationUpdates()
-            stopSelf()
-        }
+       // if (startedFromNotification) {
+       //     removeLocationUpdates()
+       //     stopSelf()
+       // }
         // Tells the system to not try to recreate the service after it has been killed.
         return START_NOT_STICKY
     }
@@ -227,7 +228,8 @@ class LocationUpdatesService: Service(), BlinkListener {
             Log.i(LOG_TAG, "start blink!")
             blinkRequestHandler = BlinkRequestHandler(
                 credentials = makeCredentials(),
-                listener = this)
+                listener = this
+            )
 
             blinkAutomator = BlinkAutomator(blinkRequestHandler!!)
             blinkAutomator!!.start()
@@ -247,7 +249,7 @@ class LocationUpdatesService: Service(), BlinkListener {
     fun requestLocationUpdates() {
         Log.i(LOG_TAG, "Requesting location updates")
         setRequestingLocationUpdates(this, true)
-        val intent = Intent(applicationContext, LocationUpdatesService::class.java)
+        val intent = Intent(applicationContext, OldLocationUpdatesService::class.java)
         startService(intent)
         try {
                 mFusedLocationClient.requestLocationUpdates(mLocationRequest,
@@ -298,7 +300,7 @@ class LocationUpdatesService: Service(), BlinkListener {
      * Returns the {@link NotificationCompat} used as part of the foreground service.
      */
     private fun getStatusUpdateNotification(state: BlinkArmState): Notification {
-        val intent = Intent(this, LocationUpdatesService::class.java)
+        val intent = Intent(this, OldLocationUpdatesService::class.java)
 
         // :TODO: oneline this:
         var text = "Blink Status Change: $state"
@@ -323,7 +325,7 @@ class LocationUpdatesService: Service(), BlinkListener {
                 .setContentTitle(getLocationTitle(this))
                 .setOngoing(true)
                 .setPriority(Notification.PRIORITY_HIGH)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.mipmap.blink_green_round)
                 .setTicker(text)
                 .setWhen(System.currentTimeMillis())
                 .setContentIntent(pendingIntent)
@@ -378,10 +380,10 @@ class LocationUpdatesService: Service(), BlinkListener {
      * Class used for the client Binder.  Since this service runs in the same process as its
      * clients, we don't need to deal with IPC.
      */
-     class LocalBinder(self_: LocationUpdatesService): Binder() {
-        val self: LocationUpdatesService = self_
+     class LocalBinder(self_: OldLocationUpdatesService): Binder() {
+        val self: OldLocationUpdatesService = self_
 
-        fun getService(): LocationUpdatesService {
+        fun getService(): OldLocationUpdatesService {
             return self
         }
     }
@@ -395,7 +397,7 @@ class LocationUpdatesService: Service(), BlinkListener {
         val manager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val services = manager.getRunningServices(Integer.MAX_VALUE)
         for (service in services) {
-            if (LocationUpdatesService::class.java.name == service.service.className) {
+            if (OldLocationUpdatesService::class.java.name == service.service.className) {
                 if (service.foreground) {
                     return true;
                 }
