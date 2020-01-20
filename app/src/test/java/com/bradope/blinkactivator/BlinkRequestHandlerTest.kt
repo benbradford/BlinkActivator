@@ -18,9 +18,13 @@ class BlinkRequestHandlerTest {
     @MockK
     lateinit var tracker: LocationStateTracker
 
+    @MockK
+    lateinit var blinkAccessGuard: BlinkAccessGuard
+
     @Before
     fun before() {
         MockKAnnotations.init(this)
+        every {blinkAccessGuard.canAccessBlink()} returns true
     }
 
     @Test
@@ -35,6 +39,7 @@ class BlinkRequestHandlerTest {
             credentials = credentials,
             blinkApi = api,
             tracker = tracker,
+            blinkAccessGuard = blinkAccessGuard,
             listener = listener
         ).begin()
 
@@ -44,7 +49,7 @@ class BlinkRequestHandlerTest {
     }
 
     @Test
-    fun canDisarmWhenLeaveHouse() {
+    fun canDisarmWhenLeaveHouseOnThreeDataPoints() {
         // given
         var listener = mockk<BlinkListener>(relaxed = true)
         var location = mockk<Location>()
@@ -58,15 +63,47 @@ class BlinkRequestHandlerTest {
             credentials = credentials,
             blinkApi = api,
             tracker = tracker,
+            blinkAccessGuard = blinkAccessGuard,
             listener = listener
         )
         automator.begin()
         automator.newLocation(location)
-
+        automator.newLocation(location)
+        automator.newLocation(location)
+        automator.pollRequestQueue()
+        automator.pollRequestQueue()
         automator.pollRequestQueue()
 
         // then
         verify { listener.onStatusRefresh(BlinkArmState.ARMED) }
+    }
+
+    @Test
+    fun willNotDisarmOnLessThanThreeLeaveDataPoints() {
+        // given
+        var listener = mockk<BlinkListener>(relaxed = true)
+        var location = mockk<Location>()
+        every { api.register(credentials )} returns true
+        every { api.getArmState() } returns BlinkArmState.DISARMED andThen BlinkArmState.ARMED
+        every { api.arm() } returns true
+        every { tracker.getLocationStateForLocation( location) } returns LocationStateTracker.LocationState.OUT
+
+        // when
+        val automator = BlinkRequestHandler(
+            credentials = credentials,
+            blinkApi = api,
+            tracker = tracker,
+            blinkAccessGuard = blinkAccessGuard,
+            listener = listener
+        )
+        automator.begin()
+        automator.newLocation(location)
+        automator.newLocation(location)
+        automator.pollRequestQueue()
+        automator.pollRequestQueue()
+
+        // then
+        verify (exactly = 0) { listener.onStatusRefresh(BlinkArmState.ARMED) }
     }
 
     @Test
@@ -84,6 +121,7 @@ class BlinkRequestHandlerTest {
             credentials = credentials,
             blinkApi = api,
             tracker = tracker,
+            blinkAccessGuard = blinkAccessGuard,
             listener = listener
         )
         automator.begin()
@@ -112,6 +150,7 @@ class BlinkRequestHandlerTest {
             credentials = credentials,
             blinkApi = api,
             tracker = tracker,
+            blinkAccessGuard = blinkAccessGuard,
             listener = listener
         )
         automator.begin()
@@ -141,6 +180,7 @@ class BlinkRequestHandlerTest {
             credentials = credentials,
             blinkApi = api,
             tracker = tracker,
+            blinkAccessGuard = blinkAccessGuard,
             listener = listener
         )
         automator.begin()
@@ -167,10 +207,17 @@ class BlinkRequestHandlerTest {
             credentials = credentials,
             blinkApi = api,
             tracker = tracker,
+            blinkAccessGuard = blinkAccessGuard,
             listener = listener
         )
         automator.begin()
+
         automator.newLocation(location)
+        automator.newLocation(location)
+        automator.newLocation(location)
+
+        automator.pollRequestQueue()
+        automator.pollRequestQueue()
         automator.pollRequestQueue()
 
         // then

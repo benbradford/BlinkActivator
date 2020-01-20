@@ -208,7 +208,7 @@ class BlinkApiTest {
         // then
         assertFalse(result)
         verify(exactly = 1) {getter.get(armUrl, any(), any(), any())}
-        verify(exactly = 4) {getter.get(commandStatusUrl, any(), any(), any())}
+        verify(exactly = 5) {getter.get(commandStatusUrl, any(), any(), any())}
     }
 
     @Test

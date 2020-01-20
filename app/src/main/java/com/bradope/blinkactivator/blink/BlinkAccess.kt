@@ -34,6 +34,8 @@ private const val FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS = UPDATE_INTERVAL_IN_M
 private var blinkRequestHandler: BlinkRequestHandler? = null
 private var blinkAutomator: BlinkAutomator? = null
 private var fusedLocationClient: FusedLocationProviderClient? = null
+private var blinkScheduleHandler: BlinkScheduleHandler? = null
+private var blinkAccessGuard: BlinkAccessGuard? = null
 private val locationRequest = createLocationRequest()
 private var locationCallback: LocationCallback? = null
 private val blinkRequestListener = BlinkHandlerListener()
@@ -47,11 +49,12 @@ fun blinkInit(context: Context) {
             val email = context.getString(R.string.email)
             val pass = context.getString(R.string.pass)
             cred = createCredentials(email, pass)
-            storeCredewntials(context, cred!!)
+            storeCredewntials(context, cred)
         }
-
-        blinkRequestHandler = BlinkRequestHandler(cred, listener = blinkRequestListener)
-        blinkAutomator = BlinkAutomator(blinkRequestHandler!!)
+        blinkAccessGuard = BlinkAccessGuard()
+        blinkScheduleHandler = BlinkScheduleHandler(blinkAccessGuard!!)
+        blinkRequestHandler = BlinkRequestHandler(cred, listener = blinkRequestListener, blinkAccessGuard = blinkAccessGuard!!)
+        blinkAutomator = BlinkAutomator(blinkRequestHandler!!, blinkAccessGuard = blinkAccessGuard!!)
         blinkAutomator!!.start()
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
