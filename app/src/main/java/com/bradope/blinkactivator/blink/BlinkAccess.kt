@@ -54,17 +54,24 @@ fun blinkInit(context: Context) {
         }
 
         blinkAccessGuard = BlinkAccessGuard()
-        blinkScheduleHandler = BlinkScheduleHandler(blinkAccessGuard!!, blinkSettings)
+
+        blinkScheduleHandler = BlinkScheduleHandler(
+            blinkAccessGuard = blinkAccessGuard!!,
+            blinkSettings = blinkSettings,
+            hoursAndMinsFactory = DefaultHoursAndMinsFactory())
+
         blinkRequestHandler = BlinkRequestHandler(
             credentials = cred,
             listener = blinkRequestListener,
             blinkAccessGuard = blinkAccessGuard!!,
             blinkSettings = blinkSettings)
+
         blinkAutomator = BlinkAutomator(
             handler = blinkRequestHandler!!,
             blinkAccessGuard = blinkAccessGuard!!,
             blinkScheduleHandler = blinkScheduleHandler!!,
             blinkSettings = blinkSettings)
+
         blinkAutomator!!.start()
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
@@ -115,7 +122,6 @@ fun blinkGetLastBlinkState(): BlinkArmState {
         return BlinkArmState.UNKNOWN
     }
     return blinkRequestHandler!!.getLastBlinkState()
-
 }
 
 fun blinkGetLastLocationState(): LocationStateTracker.LocationState {

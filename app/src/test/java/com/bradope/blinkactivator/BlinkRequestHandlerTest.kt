@@ -4,7 +4,6 @@ import android.location.Location
 import com.bradope.blinkactivator.blink.*
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
-import junit.framework.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
