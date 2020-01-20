@@ -3,7 +3,6 @@ package com.bradope.blinkactivator.blink
 import android.location.Location
 import kotlin.math.sqrt
 
-
 open class LocationStateTracker(blinkSettings: BlinkSettings) {
     enum class LocationState {
         AT_HOME,
@@ -11,8 +10,8 @@ open class LocationStateTracker(blinkSettings: BlinkSettings) {
         UNKNOWN
     }
 
-    val homeLocationFetcher = blinkSettings.fetchHomeLocation()
-    val minDistanceFromHomeFetcher = blinkSettings.fetchMinDistFromHome()
+    val homeLocationFetcher = fetcher(blinkSettings::homeLocation)
+    val minDistanceFromHomeFetcher = fetcher(blinkSettings::minDistFromHome)
 
     fun getLocationStateForLocation(location: Location): LocationState {
         val lat = location.latitude - homeLocationFetcher().latitude

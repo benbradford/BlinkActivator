@@ -11,7 +11,6 @@ interface BlinkListener {
     fun onStatusRefresh(state: BlinkArmState)
 }
 
-
 class BlinkRequestHandler(
     val credentials: Credentials,
     blinkSettings: BlinkSettings,
@@ -31,7 +30,7 @@ class BlinkRequestHandler(
 
     data class Request(val type: RequestType, val data: Any?)
 
-    private val fetchMaxStatusRefreshBackoffTimeInSeconds = blinkSettings.fetchMaxStatusRefreshBackoffTimeInSeconds()
+    private val fetchMaxStatusRefreshBackoffTime = fetcher(blinkSettings::maxStatusRefreshBackoffTimeInSeconds)
     private val blinkArmMonitor = BlinkArmMonitor(blinkApi, blinkSettings)
     private var lastKnownBlinkArmState = BlinkArmState.UNKNOWN
     private var lastKnownLocationState = LocationStateTracker.LocationState.UNKNOWN
@@ -161,7 +160,7 @@ class BlinkRequestHandler(
     }
 
     private fun withBackOff(func: (lastWaitTime: Int)->Boolean, lastWaitTime: Int): Boolean
-            = backOffFactory.makeBackOff(quitRequested, fetchMaxStatusRefreshBackoffTimeInSeconds())
+            = backOffFactory.makeBackOff(quitRequested, fetchMaxStatusRefreshBackoffTime())
                 .withBackOff(func, lastWaitTime)
 
 }

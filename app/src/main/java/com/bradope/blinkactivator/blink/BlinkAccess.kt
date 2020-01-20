@@ -3,7 +3,6 @@ package com.bradope.blinkactivator.blink
 import android.content.Context
 import android.location.Location
 import android.os.Looper
-import android.util.Log
 import com.bradope.blinkactivator.R
 import com.google.android.gms.location.*
 
@@ -55,7 +54,7 @@ fun blinkInit(context: Context) {
         }
 
         blinkAccessGuard = BlinkAccessGuard()
-        blinkScheduleHandler = BlinkScheduleHandler(blinkAccessGuard!!)
+        blinkScheduleHandler = BlinkScheduleHandler(blinkAccessGuard!!, blinkSettings)
         blinkRequestHandler = BlinkRequestHandler(
             credentials = cred,
             listener = blinkRequestListener,

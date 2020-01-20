@@ -84,8 +84,8 @@ open class BlinkApi(
     private val LOG_TAG = "bradope_log " + BlinkApiSession::class.java.simpleName
 
     private var currentSession: BlinkApiSession? = null
-    private val apiTimeout = blinkSettings.fetchBlinkApiTimeoutInSeconds()
-    private val fetchMaxCommandStatusCheckBackoffTimeInSeconds = blinkSettings.fetchMaxCommandStatusCheckBackoffTimeInSeconds()
+    private val apiTimeout = fetcher(blinkSettings::apiCallTimeoutInSeconds)
+    private val maxCommandStatusCheckBackoffTime = fetcher(blinkSettings::maxCommandStatusCheckBackoffTimeInSeconds)
 
     fun getSession() = currentSession // for testing
 
@@ -208,7 +208,7 @@ open class BlinkApi(
             return httpResponseReader.commandCompletionStatus(checkResult) == "Command succeeded"
         }
 
-        if (maxWaitTimeInSeconds > fetchMaxCommandStatusCheckBackoffTimeInSeconds()) {
+        if (maxWaitTimeInSeconds > maxCommandStatusCheckBackoffTime()) {
             return false
         }
 

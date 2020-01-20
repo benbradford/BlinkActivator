@@ -3,7 +3,6 @@ package com.bradope.blinkactivator.blink
 import android.util.Log
 import java.util.concurrent.atomic.AtomicBoolean
 
-
 open class BackOff(val quitRequested: AtomicBoolean, val maxWaitTimeInSeconds: Int) {
     private val LOG_TAG = "bradope_log " + BackOff::class.java.simpleName
 

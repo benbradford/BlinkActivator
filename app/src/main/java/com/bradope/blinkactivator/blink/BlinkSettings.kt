@@ -1,8 +1,12 @@
 package com.bradope.blinkactivator.blink
 
+import com.bradope.blinkactivator.R
 import com.google.android.gms.maps.model.LatLng
+import kotlin.reflect.KMutableProperty
+import kotlin.reflect.KMutableProperty0
+import kotlin.reflect.KProperty
 
-class BlinkSettings (
+data class BlinkSettings (
     var homeLocation: LatLng = LatLng(0.0, 0.0),
     var minDistFromHome: Double = 0.001583,
 
@@ -14,21 +18,10 @@ class BlinkSettings (
 
     var renewSessionIntervalInSeconds: Int = 60 * 60,
     var refreshStatusIntervalInSeconds: Int = 60 * 1,
+    var checkScheduleIntervalInSeconds: Int = 55 * 1,
 
     var enableAfterTime: HoursAndMins? = null,
     var disableAfterTime: HoursAndMins? = null
-) {
+)
 
-    fun fetchHomeLocation() = { -> homeLocation}
-    fun fetchMinDistFromHome() = { -> minDistFromHome}
-
-    fun fetchNumLocationLogsOutToArm() = { -> numLocationLogsOutToArm }
-
-    fun fetchMaxStatusRefreshBackoffTimeInSeconds() = { -> maxStatusRefreshBackoffTimeInSeconds }
-    fun fetchMaxCommandStatusCheckBackoffTimeInSeconds() = { -> maxCommandStatusCheckBackoffTimeInSeconds}
-    fun fetchBlinkApiTimeoutInSeconds() = { -> apiCallTimeoutInSeconds }
-
-    fun fetchRenewSessionIntervalInSeconds() = { -> renewSessionIntervalInSeconds }
-    fun fetchRefreshStatusIntervalInSeconds() = { -> refreshStatusIntervalInSeconds }
-
-}
+fun <T> fetcher(field: KProperty<T>): () -> T = { -> field.call() }

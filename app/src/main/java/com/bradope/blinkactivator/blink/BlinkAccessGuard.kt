@@ -19,13 +19,14 @@ open class BlinkAccessGuard {
         if (isInSchedule ) canAccess = true
     }
 
-    fun setScheduleBlackTime() {
-        isInSchedule = false
-        canAccess = false
+    fun setScheduledToPerformChecks(shouldPerformChecks: Boolean) {
+        isInSchedule =shouldPerformChecks
+        if (isInSchedule && pauseAccess == false) {
+            canAccess = true
+        } else {
+            isInSchedule = false
+            canAccess = false
+        }
     }
 
-    fun setScheduleOkTime() {
-        isInSchedule = true
-        if (pauseAccess == false) canAccess = true
-    }
 }

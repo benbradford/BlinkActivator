@@ -2,13 +2,11 @@ package com.bradope.blinkactivator.blink
 
 import android.util.Log
 
-const val DEFAULT_NUM_OUT_LOGS_REQUIRED_TO_DISARM = 3
-
 class BlinkArmMonitor(
     val blinkApi: BlinkApi,
     blinkSettings: BlinkSettings
 ) {
-    val fetchNumLocationLogsOutToArm = blinkSettings.fetchNumLocationLogsOutToArm()
+    val fetchNumLocationLogsOutToArm = fetcher(blinkSettings::numLocationLogsOutToArm)
 
     var numConsecutiveOutLogs = 0
     var numConsecutiveHomeLogs = 0

@@ -4,6 +4,7 @@ import android.location.Location
 import com.bradope.blinkactivator.blink.*
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
+import junit.framework.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 
@@ -233,4 +234,5 @@ class BlinkRequestHandlerTest {
         verify(exactly = 1) { listener.onStatusRefresh(BlinkArmState.DISARMED)  }
         verify(exactly = 1) { listener.onStatusRefresh(BlinkArmState.ARMED) }
     }
+
 }
