@@ -3,12 +3,8 @@ package com.bradope.blinkactivator.blink
 import android.annotation.SuppressLint
 import android.location.Location
 import android.util.Log
-import com.google.android.gms.maps.model.LatLng
 import java.util.concurrent.ConcurrentLinkedDeque
 import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.concurrent.thread
-import kotlin.math.sqrt
-
 
 interface BlinkListener {
     fun onRegister(success: Boolean)
@@ -18,8 +14,9 @@ interface BlinkListener {
 
 class BlinkRequestHandler(
     val credentials: Credentials,
-    val blinkApi: BlinkApi = BlinkApi(),
-    val tracker: LocationStateTracker = LocationStateTracker(),
+    blinkSettings: BlinkSettings,
+    val blinkApi: BlinkApi = BlinkApi(blinkSettings = blinkSettings),
+    val tracker: LocationStateTracker = LocationStateTracker(blinkSettings),
     val backOffFactory: BackOffFactory = BackOffFactory(),
     val blinkAccessGuard: BlinkAccessGuard,
     var listener: BlinkListener? = null) {
@@ -34,14 +31,13 @@ class BlinkRequestHandler(
 
     data class Request(val type: RequestType, val data: Any?)
 
-    private val blinkArmMonitor = BlinkArmMonitor(blinkApi)
+    private val fetchMaxStatusRefreshBackoffTimeInSeconds = blinkSettings.fetchMaxStatusRefreshBackoffTimeInSeconds()
+    private val blinkArmMonitor = BlinkArmMonitor(blinkApi, blinkSettings)
     private var lastKnownBlinkArmState = BlinkArmState.UNKNOWN
-    private var lastKnownLocationState =
-        LocationStateTracker.LocationState.UNKNOWN
+    private var lastKnownLocationState = LocationStateTracker.LocationState.UNKNOWN
     private var lastLocation: Location? = null
 
     private val quitRequested = AtomicBoolean(false)
-    private val refreshRequested = AtomicBoolean(false)
 
     @SuppressLint("NewApi")
     private val requestQueue = ConcurrentLinkedDeque<Request>()
@@ -103,7 +99,7 @@ class BlinkRequestHandler(
         listener?.onStatusRefresh(lastKnownBlinkArmState)
     }
 
-    private fun createNewBlinkApiSession(lastWaitTime: Long = 1L): Boolean {
+    private fun createNewBlinkApiSession(lastWaitTime: Int = 1): Boolean {
         try {
             if (blinkApi.register(credentials)) {
                 listener?.onRegister(true)
@@ -152,7 +148,7 @@ class BlinkRequestHandler(
         return false
     }
 
-    private fun refreshArmState(lastWaitTime: Long = 1L): Boolean {
+    private fun refreshArmState(lastWaitTime: Int = 1): Boolean {
         var state = blinkApi.getArmState()
         if (state == null || state == BlinkArmState.UNKNOWN) {
             Log.w(LOG_TAG, "invalid blink state - will retry")
@@ -164,6 +160,8 @@ class BlinkRequestHandler(
         return true;
     }
 
-    private fun withBackOff(func: (lastWaitTime: Long)->Boolean, lastWaitTime: Long): Boolean = backOffFactory.makeBackOff(quitRequested, refreshRequested).withBackOff(func, lastWaitTime)
+    private fun withBackOff(func: (lastWaitTime: Int)->Boolean, lastWaitTime: Int): Boolean
+            = backOffFactory.makeBackOff(quitRequested, fetchMaxStatusRefreshBackoffTimeInSeconds())
+                .withBackOff(func, lastWaitTime)
 
 }

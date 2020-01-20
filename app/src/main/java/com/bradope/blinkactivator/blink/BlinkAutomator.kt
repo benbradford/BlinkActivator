@@ -10,10 +10,11 @@ const val BLINK_REFRESH_STATUS_INTERVAL_IN_SECONDS = 60 * 1L
 class BlinkAutomator(
     val handler: BlinkRequestHandler,
     val blinkAccessGuard: BlinkAccessGuard,
-    val renewSessionPeriodInSeconds: Long = BLINK_RENEW_SESSION_INTERVAL_IN_SECONDS,
-    val refreshStatusPeriodInSeconds: Long = BLINK_REFRESH_STATUS_INTERVAL_IN_SECONDS
+    val blinkScheduleHandler: BlinkScheduleHandler,
+    blinkSettings: BlinkSettings
 ) {
-
+    private val fetchRenewSessionIntervalInSeconds = blinkSettings.fetchRenewSessionIntervalInSeconds()
+    private val fetchRefreshStatusIntervalInSeconds = blinkSettings.fetchRefreshStatusIntervalInSeconds()
     private val quitRequested = AtomicBoolean(false)
 
     private var pollThread: Thread? = null
@@ -45,10 +46,10 @@ class BlinkAutomator(
 
             val now = System.currentTimeMillis() / 1000
 
-            if (now >= lastRenew + renewSessionPeriodInSeconds) {
+            if (now >= lastRenew + fetchRenewSessionIntervalInSeconds()) {
                 lastRenew = now
                 handler.requestRenewSession()
-            } else if (now >= lastRefresh + refreshStatusPeriodInSeconds) {
+            } else if (now >= lastRefresh + fetchRefreshStatusIntervalInSeconds()) {
                 handler.requestRefreshStatus()
                 lastRefresh = now
             }

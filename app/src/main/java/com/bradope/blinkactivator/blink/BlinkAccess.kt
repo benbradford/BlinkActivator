@@ -36,9 +36,11 @@ private var blinkAutomator: BlinkAutomator? = null
 private var fusedLocationClient: FusedLocationProviderClient? = null
 private var blinkScheduleHandler: BlinkScheduleHandler? = null
 private var blinkAccessGuard: BlinkAccessGuard? = null
-private val locationRequest = createLocationRequest()
 private var locationCallback: LocationCallback? = null
+
+private val locationRequest = createLocationRequest()
 private val blinkRequestListener = BlinkHandlerListener()
+private val blinkSettings = BlinkSettings()
 
 fun blinkInit(context: Context) {
     if (blinkRequestHandler == null) {
@@ -51,10 +53,19 @@ fun blinkInit(context: Context) {
             cred = createCredentials(email, pass)
             storeCredewntials(context, cred)
         }
+
         blinkAccessGuard = BlinkAccessGuard()
         blinkScheduleHandler = BlinkScheduleHandler(blinkAccessGuard!!)
-        blinkRequestHandler = BlinkRequestHandler(cred, listener = blinkRequestListener, blinkAccessGuard = blinkAccessGuard!!)
-        blinkAutomator = BlinkAutomator(blinkRequestHandler!!, blinkAccessGuard = blinkAccessGuard!!)
+        blinkRequestHandler = BlinkRequestHandler(
+            credentials = cred,
+            listener = blinkRequestListener,
+            blinkAccessGuard = blinkAccessGuard!!,
+            blinkSettings = blinkSettings)
+        blinkAutomator = BlinkAutomator(
+            handler = blinkRequestHandler!!,
+            blinkAccessGuard = blinkAccessGuard!!,
+            blinkScheduleHandler = blinkScheduleHandler!!,
+            blinkSettings = blinkSettings)
         blinkAutomator!!.start()
 
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
@@ -119,6 +130,10 @@ fun blinkGetLastLocation(): Location? {
     if (blinkRequestHandler == null)
         return null
     return blinkRequestHandler!!.getLastLocation()
+}
+
+fun blinkGetSettings(): BlinkSettings {
+    return blinkSettings
 }
 
 private fun createLocationRequest(): LocationRequest {

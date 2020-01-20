@@ -9,6 +9,8 @@ import org.junit.Test
 
 class BlinkRequestHandlerTest {
 
+    val settings = BlinkSettings()
+
     @MockK
     lateinit var credentials: Credentials
 
@@ -40,7 +42,8 @@ class BlinkRequestHandlerTest {
             blinkApi = api,
             tracker = tracker,
             blinkAccessGuard = blinkAccessGuard,
-            listener = listener
+            listener = listener,
+            blinkSettings = settings
         ).begin()
 
         // then
@@ -64,7 +67,8 @@ class BlinkRequestHandlerTest {
             blinkApi = api,
             tracker = tracker,
             blinkAccessGuard = blinkAccessGuard,
-            listener = listener
+            listener = listener,
+            blinkSettings = settings
         )
         automator.begin()
         automator.newLocation(location)
@@ -94,7 +98,8 @@ class BlinkRequestHandlerTest {
             blinkApi = api,
             tracker = tracker,
             blinkAccessGuard = blinkAccessGuard,
-            listener = listener
+            listener = listener,
+            blinkSettings = settings
         )
         automator.begin()
         automator.newLocation(location)
@@ -122,7 +127,8 @@ class BlinkRequestHandlerTest {
             blinkApi = api,
             tracker = tracker,
             blinkAccessGuard = blinkAccessGuard,
-            listener = listener
+            listener = listener,
+            blinkSettings = settings
         )
         automator.begin()
         automator.newLocation(location)
@@ -151,7 +157,8 @@ class BlinkRequestHandlerTest {
             blinkApi = api,
             tracker = tracker,
             blinkAccessGuard = blinkAccessGuard,
-            listener = listener
+            listener = listener,
+            blinkSettings = settings
         )
         automator.begin()
         automator.newLocation(location)
@@ -181,7 +188,8 @@ class BlinkRequestHandlerTest {
             blinkApi = api,
             tracker = tracker,
             blinkAccessGuard = blinkAccessGuard,
-            listener = listener
+            listener = listener,
+            blinkSettings = settings
         )
         automator.begin()
         automator.newLocation(location)
@@ -208,7 +216,8 @@ class BlinkRequestHandlerTest {
             blinkApi = api,
             tracker = tracker,
             blinkAccessGuard = blinkAccessGuard,
-            listener = listener
+            listener = listener,
+            blinkSettings = settings
         )
         automator.begin()
 

@@ -6,8 +6,9 @@ const val DEFAULT_NUM_OUT_LOGS_REQUIRED_TO_DISARM = 3
 
 class BlinkArmMonitor(
     val blinkApi: BlinkApi,
-    val numOutLogsRequiredToDisarm: Int = DEFAULT_NUM_OUT_LOGS_REQUIRED_TO_DISARM
+    blinkSettings: BlinkSettings
 ) {
+    val fetchNumLocationLogsOutToArm = blinkSettings.fetchNumLocationLogsOutToArm()
 
     var numConsecutiveOutLogs = 0
     var numConsecutiveHomeLogs = 0
@@ -15,14 +16,14 @@ class BlinkArmMonitor(
     fun logLocationIn(): Boolean {
         numConsecutiveOutLogs = 0
         ++numConsecutiveHomeLogs
-        return disarm()
+        return blinkApi.disarm()
     }
 
     fun logLocationOut(): Boolean {
         ++numConsecutiveOutLogs
         numConsecutiveHomeLogs = 0
 
-        return (numConsecutiveOutLogs == numOutLogsRequiredToDisarm) && arm()
+        return (numConsecutiveOutLogs == fetchNumLocationLogsOutToArm()) && arm()
     }
 
     private fun arm(attempts: Int = 0): Boolean {
@@ -30,17 +31,9 @@ class BlinkArmMonitor(
         if (blinkApi.arm()) {
             return true
         }
-        if (attempts < 3)
+        if (attempts < fetchNumLocationLogsOutToArm())
             return arm(attempts+1)
         return false
     }
 
-    private fun disarm(attempts: Int = 0): Boolean {
-        if (blinkApi.disarm()) {
-            return true
-        }
-        if (attempts < 3)
-            return disarm(attempts+1)
-        return false
-    }
 }

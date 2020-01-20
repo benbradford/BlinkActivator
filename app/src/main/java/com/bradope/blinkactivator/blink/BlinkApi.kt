@@ -25,7 +25,7 @@ class DefaultHttpResponseReader: HttpResponseReader {
     override fun authToken(response: HttpResponse): String = (response.jsonObject["authtoken"] as JSONObject)["authtoken"] as String
     override fun networks(response: HttpResponse): String = (response.jsonObject["networks"] as JSONObject).keys().next()
     override fun armState(response: HttpResponse): String = ((response.jsonObject["devices"] as JSONArray)[0] as JSONObject)["active"] as String
-    override fun statusId(response: HttpResponse): String = (response.jsonObject["id"] as Integer).toString()
+    override fun statusId(response: HttpResponse): String = (response.jsonObject["id"] as Int).toString()
     override fun isCommandComplete(response: HttpResponse): Boolean = response.jsonObject["complete"] as Boolean
     override fun commandCompletionStatus(response: HttpResponse): String = response.jsonObject["status_msg"] as String
 }
@@ -61,18 +61,31 @@ class KHttpGetter: HttpGetter {
     }
 }
 
+interface Waiter {
+    fun wait(waitTimeInSeconds: Int)
+}
+
+class DefaultWaiter: Waiter {
+    override fun wait(waitTimeInSeconds: Int) {
+        Thread.sleep(waitTimeInSeconds * 1000L)
+    }
+}
+
 open class BlinkApi(
     val httpGetter: HttpGetter = KHttpGetter(),
     val httpResponseReader: HttpResponseReader = DefaultHttpResponseReader(),
-    val decrypter: CredentialsDecrypter = DefaultCredentialsDecrypter()
+    val decrypter: CredentialsDecrypter = DefaultCredentialsDecrypter(),
+    blinkSettings: BlinkSettings,
+    val waiter: Waiter = DefaultWaiter()
 )
 {
     data class BlinkApiSession(val token: String, val network: String, val credentials: Credentials)
 
-    private val BLINK_API_CALL_TIMEOUT = 5.0
     private val LOG_TAG = "bradope_log " + BlinkApiSession::class.java.simpleName
 
     private var currentSession: BlinkApiSession? = null
+    private val apiTimeout = blinkSettings.fetchBlinkApiTimeoutInSeconds()
+    private val fetchMaxCommandStatusCheckBackoffTimeInSeconds = blinkSettings.fetchMaxCommandStatusCheckBackoffTimeInSeconds()
 
     fun getSession() = currentSession // for testing
 
@@ -83,7 +96,7 @@ open class BlinkApi(
                 url = "https://rest.prod.immedia-semi.com/login",
                 headers = requiredHeaders(),
                 data = createBody(credentials),
-                timeout = BLINK_API_CALL_TIMEOUT
+                timeout = apiTimeout()
             )
             Log.i(LOG_TAG, "register with blink got res " + res.statusCode)
 
@@ -115,7 +128,7 @@ open class BlinkApi(
                 "TOKEN_AUTH" to currentSession!!.token
             ),
             data = "",
-            timeout = BLINK_API_CALL_TIMEOUT
+            timeout = apiTimeout()
         )
         if (res.statusCode != 200) {
             Log.e(LOG_TAG , "getArmState error status code: " + res.statusCode)
@@ -142,7 +155,7 @@ open class BlinkApi(
             url =  makeNetworkSpecificEndpointUrl( "arm", currentSession!!),
             headers = makeHeadersWithAuth(currentSession!!),
             data = createBody(currentSession!!.credentials),
-            timeout = BLINK_API_CALL_TIMEOUT
+            timeout = apiTimeout()
         )
 
         if (status.statusCode == 200) {
@@ -163,7 +176,7 @@ open class BlinkApi(
             url =  makeNetworkSpecificEndpointUrl( "disarm", currentSession!!),
             headers = makeHeadersWithAuth(currentSession!!),
             data = createBody(currentSession!!.credentials),
-            timeout = BLINK_API_CALL_TIMEOUT
+            timeout = apiTimeout()
         )
 
         Log.i(LOG_TAG,"disarmed $status")
@@ -174,9 +187,9 @@ open class BlinkApi(
         }
     }
 
-    private fun pollCommandStatus(id: String, maxWaitTimeInSeconds: Long = 1L): Boolean {
+    private fun pollCommandStatus(id: String, maxWaitTimeInSeconds: Int = 1): Boolean {
 
-        Thread.sleep(maxWaitTimeInSeconds)
+        waiter.wait(maxWaitTimeInSeconds)
 
         val checkResult = httpGetter.get (
             url = "https://rest.prde.immedia-semi.com/network/@networkId/command/@commandId"
@@ -187,7 +200,7 @@ open class BlinkApi(
                 "TOKEN_AUTH" to currentSession!!.token
             ),
             data = "",
-            timeout = BLINK_API_CALL_TIMEOUT
+            timeout = apiTimeout()
         )
 
         // "complete":true,"status":0,"status_msg":"Command succeeded"
@@ -195,11 +208,11 @@ open class BlinkApi(
             return httpResponseReader.commandCompletionStatus(checkResult) == "Command succeeded"
         }
 
-        if (maxWaitTimeInSeconds > 10L) {
+        if (maxWaitTimeInSeconds > fetchMaxCommandStatusCheckBackoffTimeInSeconds()) {
             return false
         }
 
-        return pollCommandStatus(id, maxWaitTimeInSeconds * 2L)
+        return pollCommandStatus(id, maxWaitTimeInSeconds * 2)
     }
 
     private fun requiredHeaders() = mapOf(

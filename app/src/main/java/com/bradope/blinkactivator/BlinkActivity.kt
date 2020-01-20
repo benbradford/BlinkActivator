@@ -25,7 +25,7 @@ import kotlin.math.sqrt
 class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallback {
 
     private val REQUEST_PERMISSIONS_REQUEST_CODE = 34
-    private val homeLocation = LatLng(51.083008, 1.161534)
+    private lateinit var homeLocation: LatLng
     private var googleMap: GoogleMap? = null
     private var marker: Marker? = null
     private var myLocation: LatLng? = null
@@ -36,7 +36,7 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
         this.googleMap = googleMap
         val homeCircle = CircleOptions()
             .center(homeLocation)
-            .radius(180.0)
+            .radius(blinkGetSettings().minDistFromHome * 100000)
             .clickable(true)
             .strokeColor(Color.RED)
         googleMap.addCircle(homeCircle)
@@ -56,6 +56,9 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
         if (!checkPermissions()) {
             requestPermissions()
         }
+        // add these to resources
+        homeLocation = LatLng(R.string.homeLatitude.toDouble(), R.string.homeLongitude.toDouble())
+        blinkGetSettings().homeLocation=homeLocation
 
         blinkInit(this)
         blinkSetListener(this)

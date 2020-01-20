@@ -3,6 +3,7 @@ package com.bradope.blinkactivator
 import com.bradope.blinkactivator.blink.*
 import io.mockk.*
 import io.mockk.impl.annotations.MockK
+import io.mockk.impl.annotations.RelaxedMockK
 import junit.framework.Assert.*
 import org.junit.Before
 import org.junit.Test
@@ -20,6 +21,8 @@ class BlinkApiTest {
     val armUrl = "https://rest.prde.immedia-semi.com/network/$networks/arm"
     val disarmUrl = "https://rest.prde.immedia-semi.com/network/$networks/disarm"
     val commandStatusUrl = "https://rest.prde.immedia-semi.com/network/$networks/command/$statusId"
+
+    val blinkSettings = BlinkSettings()
 
     @MockK
     lateinit var getter: HttpGetter
@@ -39,6 +42,9 @@ class BlinkApiTest {
     @MockK
     lateinit var decrypter: CredentialsDecrypter
 
+    @RelaxedMockK
+    lateinit var waiter: Waiter
+
     @Before
     fun before() {
         MockKAnnotations.init(this)
@@ -46,6 +52,7 @@ class BlinkApiTest {
         every {credentials.pass}.returns (encryptedPassword)
         every { decrypter.decryptValue(encryptedEmail)}.returns (email)
         every { decrypter.decryptValue(encryptedPassword)}.returns(password)
+
     }
 
     @Test
@@ -55,7 +62,7 @@ class BlinkApiTest {
         val response = createDefaultRegisterResponse()
 
         // when
-        val api = BlinkApi(getter, responseReader, decrypter)
+        val api = BlinkApi(getter, responseReader, decrypter, blinkSettings, waiter)
         api.register(credentials)
 
         // then
@@ -75,7 +82,7 @@ class BlinkApiTest {
         every {response.statusCode}.returns(500)
 
         // when
-        val api = BlinkApi(getter, responseReader, decrypter)
+        val api = BlinkApi(getter, responseReader, decrypter, blinkSettings, waiter)
         api.register(credentials)
 
         // then
@@ -85,9 +92,9 @@ class BlinkApiTest {
 
     @Test
     fun noSessionWillNotCallApi() {
-        assertNull(BlinkApi(getter, responseReader, decrypter).getArmState())
-        assertFalse(BlinkApi(getter, responseReader, decrypter).arm())
-        assertFalse(BlinkApi(getter, responseReader, decrypter).disarm())
+        assertNull(BlinkApi(getter, responseReader, decrypter, blinkSettings).getArmState())
+        assertFalse(BlinkApi(getter, responseReader, decrypter, blinkSettings).arm())
+        assertFalse(BlinkApi(getter, responseReader, decrypter, blinkSettings).disarm())
     }
 
     @Test
@@ -100,7 +107,7 @@ class BlinkApiTest {
         every { getter.get(armStateUrl, any(), any(), any())}.returns(response)
 
         // when
-        val api = BlinkApi(getter, responseReader, decrypter)
+        val api = BlinkApi(getter, responseReader, decrypter, blinkSettings, waiter)
         api.register(credentials)
         val state = api.getArmState()
 
@@ -119,7 +126,7 @@ class BlinkApiTest {
         every { getter.get(armStateUrl, any(), any(), any())}.returns(response)
 
         // when
-        val api = BlinkApi(getter, responseReader, decrypter)
+        val api = BlinkApi(getter, responseReader, decrypter, blinkSettings, waiter)
         api.register(credentials)
         val state = api.getArmState()
 
@@ -138,7 +145,7 @@ class BlinkApiTest {
         every {getter.get(armStateUrl, any(), any(), any())}.returns(response)
 
         // when
-        val api = BlinkApi(getter, responseReader, decrypter)
+        val api = BlinkApi(getter, responseReader, decrypter, blinkSettings, waiter)
         api.register(credentials)
         val state = api.getArmState()
 
@@ -155,7 +162,7 @@ class BlinkApiTest {
         createSuccesfulStatusResponse()
 
         // when
-        val api = BlinkApi(getter, responseReader, decrypter)
+        val api = BlinkApi(getter, responseReader, decrypter, blinkSettings, waiter)
         api.register(credentials)
         val result = api.arm()
 
@@ -178,7 +185,7 @@ class BlinkApiTest {
         every {getter.get(commandStatusUrl, any(), any(), any())}.returns(statusResponse)
 
         // when
-        val api = BlinkApi(getter, responseReader, decrypter)
+        val api = BlinkApi(getter, responseReader, decrypter, blinkSettings, waiter)
         api.register(credentials)
         val result = api.arm()
 
@@ -201,7 +208,7 @@ class BlinkApiTest {
         every {getter.get(commandStatusUrl, any(), any(), any())}.returns(statusResponse)
 
         // when
-        val api = BlinkApi(getter, responseReader, decrypter)
+        val api = BlinkApi(getter, responseReader, decrypter, blinkSettings, waiter)
         api.register(credentials)
         val result = api.arm()
 
@@ -228,7 +235,7 @@ class BlinkApiTest {
         every {getter.get(commandStatusUrl, any(), any(), any())}.returns(statusResponse)
 
         // when
-        val api = BlinkApi(getter, responseReader, decrypter)
+        val api = BlinkApi(getter, responseReader, decrypter, blinkSettings, waiter)
         api.register(credentials)
         val result = api.arm()
 
@@ -246,7 +253,7 @@ class BlinkApiTest {
         createSuccesfulStatusResponse()
 
         // when
-        val api = BlinkApi(getter, responseReader, decrypter)
+        val api = BlinkApi(getter, responseReader, decrypter, blinkSettings, waiter)
         api.register(credentials)
         val result = api.disarm()
 
@@ -272,6 +279,7 @@ class BlinkApiTest {
         every {armResponse.statusCode}.returns(200)
         every {responseReader.statusId(armResponse)}.returns(statusId)
         every {getter.get(armUrl, any(), any(), any())}.returns(armResponse)
+
         return armResponse
     }
 
@@ -280,6 +288,7 @@ class BlinkApiTest {
         every {disarmResponse.statusCode}.returns(200)
         every {responseReader.statusId(disarmResponse)}.returns(statusId)
         every {getter.get(disarmUrl, any(), any(), any())}.returns(disarmResponse)
+
         return disarmResponse
     }
 
