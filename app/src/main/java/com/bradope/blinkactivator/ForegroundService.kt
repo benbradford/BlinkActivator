@@ -12,13 +12,11 @@ import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
-import com.bradope.blinkactivator.blink.BlinkAccessListener
-import com.bradope.blinkactivator.blink.BlinkArmState
-import com.bradope.blinkactivator.blink.blinkGetLastBlinkState
-import com.bradope.blinkactivator.blink.blinkSetListener
+import com.bradope.blinkactivator.blink.*
 
 class ForegroundService : Service(), BlinkAccessListener {
 
+    private val NOTIFICATION_ID = 123
     private val CHANNEL_ID = "ForegroundService Kotlin"
     private var lastStatus: BlinkArmState = BlinkArmState.UNKNOWN
 
@@ -40,6 +38,7 @@ class ForegroundService : Service(), BlinkAccessListener {
         }
     }
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        blinkRecreateLocationRequestClient(this)
         Log.i("bradope_log_service", "onStartCommand for ${id}")
         blinkSetListener(this)
         lastStatus = blinkGetLastBlinkState()
@@ -62,7 +61,7 @@ class ForegroundService : Service(), BlinkAccessListener {
             .setContentIntent(pendingIntent)
             .setDeleteIntent(deleteIntent)
             .build()
-        startForeground(1, notification)
+        startForeground(NOTIFICATION_ID, notification)
         //stopSelf();
         return START_STICKY
     }
@@ -83,7 +82,7 @@ class ForegroundService : Service(), BlinkAccessListener {
 
     override fun onStatusChange() {
         val newArmState = blinkGetLastBlinkState()
-        val notificationId = 123
+
         if (lastStatus != BlinkArmState.UNKNOWN && newArmState != lastStatus) {
             val text = "$lastStatus -> $newArmState"
             Log.i("bradope_log_service", " sending notification $text")
@@ -107,7 +106,7 @@ class ForegroundService : Service(), BlinkAccessListener {
 
             with(NotificationManagerCompat.from(this)) {
                 // notificationId is a unique int for each notification that you must define
-                notify(notificationId, notification)
+                notify(NOTIFICATION_ID, notification)
             }
         }
         lastStatus = newArmState

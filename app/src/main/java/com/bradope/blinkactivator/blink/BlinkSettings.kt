@@ -21,7 +21,10 @@ data class BlinkSettings (
     var checkScheduleIntervalInSeconds: Int = 55 * 1,
 
     var enableAfterTime: HoursAndMins? = null,
-    var disableAfterTime: HoursAndMins? = null
-)
+    var disableAfterTime: HoursAndMins? = null,
+
+    var locationUpdateIntervalInMS: Long = 10000L,
+    var fastestLocationUpdateIntervalInMS: Long = 1000L
+ )
 
 fun <T> fetcher(field: KProperty<T>): () -> T = { -> field.call() }

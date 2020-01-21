@@ -6,7 +6,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 open class BackOff(val quitRequested: AtomicBoolean, val maxWaitTimeInSeconds: Int) {
     private val LOG_TAG = "bradope_log " + BackOff::class.java.simpleName
 
-    fun withBackOff(func: (lastWaitTime: Int)->Boolean, lastWaitTime: Int): Boolean {
+    fun withBackOff(func: (Int) -> Boolean, lastWaitTime: Int): Boolean {
         var timeOfLastRequest = System.currentTimeMillis() / 1000
         while (!quitRequested.get()) {
             Thread.sleep(1000L)

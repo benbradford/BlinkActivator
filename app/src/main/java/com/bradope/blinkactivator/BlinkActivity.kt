@@ -47,7 +47,7 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.i("bradope_log_activity", "oncreate")
-            setContentView(R.layout.activity_maps)
+        setContentView(R.layout.activity_maps)
 
         val mapFragment = supportFragmentManager
             .findFragmentById(R.id.map) as SupportMapFragment
@@ -57,7 +57,9 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
             requestPermissions()
         }
         // add these to resources
-        homeLocation = LatLng(R.string.homeLatitude.toDouble(), R.string.homeLongitude.toDouble())
+        val lat = 51.083008
+        val lon = 1.161534
+        homeLocation = LatLng(lat, lon)
         blinkGetSettings().homeLocation=homeLocation
 
         blinkInit(this)
@@ -70,7 +72,7 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
             userQuit = true
             ForegroundService.stopService(this)
             blinkQuit()
-            finish()
+            finishAndRemoveTask()
         })
         gotoHome.setOnClickListener {
             if (googleMap != null) {
@@ -111,7 +113,13 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
     override fun onResume() {
         super.onResume()
         Log.i("bradope_log_activity", "resume")
+        blinkRecreateLocationRequestClient(this)
         blinkSetListener(this)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.i("bradope_log_activity", "onDestroy")
     }
 
     override fun onConnectToBlink(success: Boolean) {
