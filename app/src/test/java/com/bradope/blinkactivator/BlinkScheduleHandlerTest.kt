@@ -19,7 +19,7 @@ class BlinkScheduleHandlerTest {
     lateinit var hoursAndMinsFactory: HoursAndMinsFactory
 
     @MockK
-    lateinit var blinkSettings: BlinkSettings
+    lateinit var onOffTimes: BlinkOnAndOffTimes
 
     val hoursAndMins = mockk<HoursAndMins>()
 
@@ -35,8 +35,8 @@ class BlinkScheduleHandlerTest {
     fun noSettingsWillAllowChecksToBePerformed() {
 
         // given
-        every {blinkSettings.enableAfterTime} returns null
-        every {blinkSettings.disableAfterTime} returns null
+        every {onOffTimes.enableAfterTime} returns null
+        every {onOffTimes.disableAfterTime} returns null
 
         // when
         performCheck()
@@ -51,8 +51,8 @@ class BlinkScheduleHandlerTest {
     fun onlyEnableAfterTimeWIllPerformCheck() {
 
         // given
-        every {blinkSettings.enableAfterTime} returns HoursAndMins(23, 59)
-        every {blinkSettings.disableAfterTime} returns null
+        every {onOffTimes.enableAfterTime} returns HoursAndMins(23, 59)
+        every {onOffTimes.disableAfterTime} returns null
 
         // when
         performCheck()
@@ -67,8 +67,8 @@ class BlinkScheduleHandlerTest {
     fun onlyDisableAfterTimeWIllPerformCheck() {
 
         // given
-        every {blinkSettings.enableAfterTime} returns null
-        every {blinkSettings.disableAfterTime} returns HoursAndMins(0, 0)
+        every {onOffTimes.enableAfterTime} returns null
+        every {onOffTimes.disableAfterTime} returns HoursAndMins(0, 0)
 
         // when
         performCheck()
@@ -83,8 +83,8 @@ class BlinkScheduleHandlerTest {
     fun disableAfterBeforeEnableAfterWillPerformChecks() {
 
         // given
-        every {blinkSettings.enableAfterTime} returns HoursAndMins(23, 59)
-        every {blinkSettings.disableAfterTime} returns HoursAndMins(0, 0)
+        every {onOffTimes.enableAfterTime} returns HoursAndMins(23, 59)
+        every {onOffTimes.disableAfterTime} returns HoursAndMins(0, 0)
 
         // when
         performCheck()
@@ -98,8 +98,8 @@ class BlinkScheduleHandlerTest {
     fun nowIsInBetweenEnableAndDisableTimesThenPerformCheck() {
 
         // given
-        every {blinkSettings.enableAfterTime} returns HoursAndMins(11, 59)
-        every {blinkSettings.disableAfterTime} returns HoursAndMins(12, 1)
+        every {onOffTimes.enableAfterTime} returns HoursAndMins(11, 59)
+        every {onOffTimes.disableAfterTime} returns HoursAndMins(12, 1)
 
         // when
         performCheck()
@@ -112,8 +112,8 @@ class BlinkScheduleHandlerTest {
     fun nowIsInBeforeEnableTimeThenDoNotPerformCheck() {
 
         // given
-        every {blinkSettings.enableAfterTime} returns HoursAndMins(12, 1)
-        every {blinkSettings.disableAfterTime} returns HoursAndMins(13, 1)
+        every {onOffTimes.enableAfterTime} returns HoursAndMins(12, 1)
+        every {onOffTimes.disableAfterTime} returns HoursAndMins(13, 1)
 
         // when
         performCheck()
@@ -126,8 +126,8 @@ class BlinkScheduleHandlerTest {
     fun nowIsInAfterDisableTimeThenDoNotPerformCheck() {
 
         // given
-        every {blinkSettings.enableAfterTime} returns HoursAndMins(11, 1)
-        every {blinkSettings.disableAfterTime} returns HoursAndMins(11, 59)
+        every {onOffTimes.enableAfterTime} returns HoursAndMins(11, 1)
+        every {onOffTimes.disableAfterTime} returns HoursAndMins(11, 59)
 
         // when
         performCheck()
@@ -140,8 +140,8 @@ class BlinkScheduleHandlerTest {
     fun nowIsEnableTimeThenPerformCheck() {
 
         // given
-        every {blinkSettings.enableAfterTime} returns HoursAndMins(12, 0)
-        every {blinkSettings.disableAfterTime} returns HoursAndMins(12, 1)
+        every {onOffTimes.enableAfterTime} returns HoursAndMins(12, 0)
+        every {onOffTimes.disableAfterTime} returns HoursAndMins(12, 1)
 
         // when
         performCheck()
@@ -154,8 +154,8 @@ class BlinkScheduleHandlerTest {
     fun nowIsDisableTimeThenDoNotPerformCheck() {
 
         // given
-        every {blinkSettings.enableAfterTime} returns HoursAndMins(11, 0)
-        every {blinkSettings.disableAfterTime} returns HoursAndMins(12, 0)
+        every {onOffTimes.enableAfterTime} returns HoursAndMins(11, 0)
+        every {onOffTimes.disableAfterTime} returns HoursAndMins(12, 0)
 
         // when
         performCheck()
@@ -167,7 +167,7 @@ class BlinkScheduleHandlerTest {
     private fun performCheck() = BlinkScheduleHandler(
         blinkAccessGuard = blinkAccessGuard,
         hoursAndMinsFactory = hoursAndMinsFactory,
-        blinkSettings = blinkSettings
+        onOffTimes = onOffTimes
     ).performCheck()
 
 }

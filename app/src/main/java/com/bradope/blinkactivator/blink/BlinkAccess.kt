@@ -26,10 +26,17 @@ class BlinkHandlerListener: BlinkListener{
             listener!!.onStatusChange()
         }
     }
+
+    override fun onScheduleRefresh(onAndOffTimes: BlinkOnAndOffTimes) {
+        blinkOnOffTimes.enableAfterTime = onAndOffTimes.enableAfterTime
+        blinkOnOffTimes.disableAfterTime = onAndOffTimes.disableAfterTime
+    }
 }
 
+private var blinkApi: BlinkApi? = null
 private var blinkRequestHandler: BlinkRequestHandler? = null
 private var blinkAutomator: BlinkAutomator? = null
+private val blinkOnOffTimes = BlinkOnAndOffTimes(null, null)
 private var fusedLocationClient: FusedLocationProviderClient? = null
 private var blinkScheduleHandler: BlinkScheduleHandler? = null
 private var blinkAccessGuard: BlinkAccessGuard? = null
@@ -43,9 +50,10 @@ fun blinkInit(context: Context) {
 
         val credentials = createCredentials(context)
 
+        blinkApi = BlinkApi(blinkSettings = blinkSettings)
         blinkAccessGuard = BlinkAccessGuard()
-        blinkScheduleHandler = createScheduleHandler()
         blinkRequestHandler = createRequestHandler(credentials)
+        blinkScheduleHandler = createScheduleHandler()
         blinkAutomator = createAutomator()
         blinkAutomator!!.start()
         locationCallback = createLocationCallback()
@@ -123,15 +131,17 @@ private fun createCredentials(context: Context): Credentials {
 }
 
 private fun createScheduleHandler() = BlinkScheduleHandler(
-    blinkAccessGuard = blinkAccessGuard!!,
-    blinkSettings = blinkSettings,
-    hoursAndMinsFactory = DefaultHoursAndMinsFactory())
+        blinkAccessGuard = blinkAccessGuard!!,
+        onOffTimes = blinkOnOffTimes,
+        hoursAndMinsFactory = DefaultHoursAndMinsFactory()
+    )
 
 private fun createRequestHandler(credentials: Credentials) = BlinkRequestHandler(
     credentials = credentials,
     listener = blinkRequestListener,
     blinkAccessGuard = blinkAccessGuard!!,
-    blinkSettings = blinkSettings)
+    blinkSettings = blinkSettings,
+    blinkApi = blinkApi!!)
 
 private fun createAutomator() = BlinkAutomator(
     handler = blinkRequestHandler!!,

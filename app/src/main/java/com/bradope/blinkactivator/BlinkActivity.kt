@@ -57,8 +57,8 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
             requestPermissions()
         }
         // add these to resources
-        val lat = 51.083008
-        val lon = 1.161534
+        val lat = getString(R.string.homeLatitude).toDouble()
+        val lon = getString(R.string.homeLongitude).toDouble()
         homeLocation = LatLng(lat, lon)
         blinkGetSettings().homeLocation=homeLocation
 
@@ -94,9 +94,13 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
             }
         }
 
+        settingsButton.setOnClickListener { showSettingsMenu() }
+        closeSettings.setOnClickListener{ closeSettingsMenu() }
+
         thread {
             while (isDestroyed() == false) {
                 showStatus()
+
                 Thread.sleep(1000)
             }
             Log.i("bradope_log_activity", "thread destroyed")
@@ -134,7 +138,20 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
 
     override fun onStatusChange() {
         //showStatus()
+    }
 
+    private fun showSettingsMenu() {
+        runOnUiThread {
+            settings_menu.visibility = View.VISIBLE
+            mainScreenLayout.visibility = View.GONE
+        }
+    }
+
+    private fun closeSettingsMenu() {
+        runOnUiThread {
+            settings_menu.visibility = View.GONE
+            mainScreenLayout.visibility = View.VISIBLE
+        }
     }
 
     private fun checkPermissions(): Boolean {

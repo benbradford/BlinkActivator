@@ -5,6 +5,29 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:orientation="vertical" >
+
+    <FrameLayout
+        android:id="@+id/settings_menu"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        >
+        <Button
+            android:id="@+id/closeSettings"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Close" />
+
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/mainScreenLayout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:visibility="visible">
+
     <LinearLayout
         android:layout_width="fill_parent"
                   android:layout_height="fill_parent"
@@ -12,24 +35,24 @@
         <TextView android:id="@+id/text"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="Blink not refreshed" />
+            android:text="Blink not active" />
         <TextView android:id="@+id/locState"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
-            android:text="Unknown Location" />
-
-        <RelativeLayout
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal" >
-
-
+            android:text="Location: Unknown" />
 
             <LinearLayout
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:layout_alignParentLeft="true">
+
+                <Button
+                    android:id="@+id/settingsButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+
+                    android:text="Settings" />
 
                 <Button
                     android:id="@+id/gotoYou"
@@ -43,14 +66,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Go To Home" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_alignParentRight="true"
-                >
 
                 <Button
                     android:id="@+id/button"
@@ -59,7 +74,8 @@
                     android:text="Refresh" />
             </LinearLayout>
 
-        </RelativeLayout>
+
+
 
         <fragment
             android:id="@+id/map"
@@ -68,8 +84,12 @@
             android:layout_height="match_parent"
             tools:context=".BlinkActivity" />
 
+
+
     </LinearLayout>
 
+
+    </LinearLayout>
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"

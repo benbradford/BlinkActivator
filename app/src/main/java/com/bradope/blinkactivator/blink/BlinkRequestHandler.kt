@@ -9,12 +9,13 @@ import java.util.concurrent.atomic.AtomicBoolean
 interface BlinkListener {
     fun onRegister(success: Boolean)
     fun onStatusRefresh(state: BlinkArmState)
+    fun onScheduleRefresh(onAndOffTimes: BlinkOnAndOffTimes)
 }
 
 class BlinkRequestHandler(
     val credentials: Credentials,
     blinkSettings: BlinkSettings,
-    val blinkApi: BlinkApi = BlinkApi(blinkSettings = blinkSettings),
+    val blinkApi: BlinkApi,
     val tracker: LocationStateTracker = LocationStateTracker(blinkSettings),
     val backOffFactory: BackOffFactory = BackOffFactory(),
     val blinkAccessGuard: BlinkAccessGuard,
@@ -48,6 +49,7 @@ class BlinkRequestHandler(
     fun begin() {
         createNewBlinkApiSession()
         refreshArmState()
+        refreshScheule()
     }
 
     fun newLocation(latestLocation: Location) = offer(RequestType.NEW_LOCATION, latestLocation)
@@ -77,6 +79,7 @@ class BlinkRequestHandler(
                 }
                 RequestType.REFRESH_STATUS -> {
                     refreshArmState()
+                    refreshScheule()
                 }
             }
         }
@@ -157,6 +160,17 @@ class BlinkRequestHandler(
         lookForRequiredArmOperation(lastKnownLocationState)
         notifyNewBlinkState(state)
         return true;
+    }
+
+    private fun refreshScheule(lastWaitTime: Int = 1): Boolean {
+        var onOffTimes = blinkApi.getSchedule()
+        if (onOffTimes == null) {
+            Log.w(LOG_TAG, "invalid schedule - will retry")
+            return withBackOff(::refreshScheule, lastWaitTime)
+        }
+
+        listener?.onScheduleRefresh(onOffTimes)
+        return true
     }
 
     private fun withBackOff(func: (lastWaitTime: Int)->Boolean, lastWaitTime: Int): Boolean

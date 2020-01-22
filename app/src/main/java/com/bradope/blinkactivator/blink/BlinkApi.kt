@@ -10,7 +10,7 @@ enum class BlinkArmState {
     UNKNOWN
 }
 
-data class HttpResponse(val statusCode: Int, val jsonObject: JSONObject)
+data class HttpResponse(val statusCode: Int, val jsonObject: JSONObject, val jsonArray: JSONArray)
 
 interface HttpResponseReader {
     fun authToken(response: HttpResponse): String
@@ -19,6 +19,7 @@ interface HttpResponseReader {
     fun statusId(response: HttpResponse): String
     fun isCommandComplete(response: HttpResponse): Boolean
     fun commandCompletionStatus(response: HttpResponse): String
+    fun onAndOffTimes(response: HttpResponse): BlinkOnAndOffTimes
 }
 
 class DefaultHttpResponseReader: HttpResponseReader {
@@ -28,10 +29,17 @@ class DefaultHttpResponseReader: HttpResponseReader {
     override fun statusId(response: HttpResponse): String = (response.jsonObject["id"] as Int).toString()
     override fun isCommandComplete(response: HttpResponse): Boolean = response.jsonObject["complete"] as Boolean
     override fun commandCompletionStatus(response: HttpResponse): String = response.jsonObject["status_msg"] as String
+    override fun onAndOffTimes(response: HttpResponse): BlinkOnAndOffTimes = BlinkOnAndOffTimes(stringTimeToHoursAndMins(getTime(response, 1)), stringTimeToHoursAndMins(getTime(response, 0)))
+
+    private fun getTime(response: HttpResponse, index: Int) = (getScheduleArray(response)[index] as JSONObject)["time"] as String
+    private fun getScheduleArray(response:HttpResponse) = (response.jsonArray[0] as JSONObject)["schedule"] as JSONArray
+    private fun stringTimeToHoursAndMins(time: String) = HoursAndMins(stringTime(time)[0].toInt(), stringTime(time)[1].toInt())
+    private fun stringTime(time: String) = time.split(" ")[1].split(":")
 }
 
 interface HttpGetter {
     fun get(url: String, headers: Map<String, String>, data: String, timeout: Double): HttpResponse
+    fun getArray(url: String, headers: Map<String, String>, data: String, timeout: Double): HttpResponse
 }
 
 interface CredentialsDecrypter {
@@ -55,9 +63,26 @@ class KHttpGetter: HttpGetter {
         if (response.statusCode == 200)
             return HttpResponse(
                 response.statusCode,
-                response.jsonObject
+                response.jsonObject,
+                JSONArray()
             )
-        return HttpResponse(response.statusCode, JSONObject())
+        return HttpResponse(response.statusCode, JSONObject(), JSONArray())
+    }
+
+    override fun getArray(
+        url: String,
+        headers: Map<String, String>,
+        data: String,
+        timeout: Double
+    ): HttpResponse {
+        val response = khttp.get(url=url, headers=headers, data=data, timeout=timeout)
+        if (response.statusCode == 200)
+            return HttpResponse(
+                response.statusCode,
+                JSONObject(),
+                response.jsonArray
+            )
+        return HttpResponse(response.statusCode, JSONObject(), JSONArray())
     }
 }
 
@@ -185,6 +210,26 @@ open class BlinkApi(
         } else {
             return false
         }
+    }
+
+    fun getSchedule(): BlinkOnAndOffTimes? {
+        if (currentSession == null) {
+            Log.w(LOG_TAG, "No currentSession in getSchedule")
+            return null
+        }
+        val status = httpGetter.getArray(
+            url =  "https://rest.prde.immedia-semi.com/api/v1/networks/${currentSession!!.network}/programs",
+            headers = mapOf(
+                "Host" to "prod.immedia-semi.com",
+                "TOKEN_AUTH" to currentSession!!.token
+            ),
+            data = "",
+            timeout = apiTimeout()
+        )
+        if (status.statusCode != 200) {
+            return null
+        }
+        return httpResponseReader.onAndOffTimes(status)
     }
 
     private fun pollCommandStatus(id: String, maxWaitTimeInSeconds: Int = 1): Boolean {
