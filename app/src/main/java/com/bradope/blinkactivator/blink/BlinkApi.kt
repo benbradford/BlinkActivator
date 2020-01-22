@@ -19,7 +19,7 @@ interface HttpResponseReader {
     fun statusId(response: HttpResponse): String
     fun isCommandComplete(response: HttpResponse): Boolean
     fun commandCompletionStatus(response: HttpResponse): String
-    fun onAndOffTimes(response: HttpResponse): BlinkOnAndOffTimes
+    fun schedule(response: HttpResponse): BlinkDailySchedule
 }
 
 class DefaultHttpResponseReader: HttpResponseReader {
@@ -29,12 +29,22 @@ class DefaultHttpResponseReader: HttpResponseReader {
     override fun statusId(response: HttpResponse): String = (response.jsonObject["id"] as Int).toString()
     override fun isCommandComplete(response: HttpResponse): Boolean = response.jsonObject["complete"] as Boolean
     override fun commandCompletionStatus(response: HttpResponse): String = response.jsonObject["status_msg"] as String
-    override fun onAndOffTimes(response: HttpResponse): BlinkOnAndOffTimes = BlinkOnAndOffTimes(stringTimeToHoursAndMins(getTime(response, 1)), stringTimeToHoursAndMins(getTime(response, 0)))
+    override fun schedule(response: HttpResponse): BlinkDailySchedule = BlinkDailySchedule(stringTimeToHoursAndMins(getTime(response, "disarm")), stringTimeToHoursAndMins(getTime(response, "arm")))
 
-    private fun getTime(response: HttpResponse, index: Int) = (getScheduleArray(response)[index] as JSONObject)["time"] as String
+    private fun getTime(response: HttpResponse, action: String) = (getObjectForAction(response, action))["time"] as String
     private fun getScheduleArray(response:HttpResponse) = (response.jsonArray[0] as JSONObject)["schedule"] as JSONArray
     private fun stringTimeToHoursAndMins(time: String) = HoursAndMins(stringTime(time)[0].toInt(), stringTime(time)[1].toInt())
     private fun stringTime(time: String) = time.split(" ")[1].split(":")
+    private fun getObjectForAction(response: HttpResponse, action: String): JSONObject {
+        val arr = getScheduleArray(response)
+        for (i in 0 until arr.length()) {
+            val entry = arr[i] as JSONObject
+            if (entry["action"] == action) {
+                return entry
+            }
+        }
+        return JSONObject()
+    }
 }
 
 interface HttpGetter {
@@ -212,7 +222,7 @@ open class BlinkApi(
         }
     }
 
-    fun getSchedule(): BlinkOnAndOffTimes? {
+    fun getSchedule(): BlinkDailySchedule? {
         if (currentSession == null) {
             Log.w(LOG_TAG, "No currentSession in getSchedule")
             return null
@@ -229,7 +239,12 @@ open class BlinkApi(
         if (status.statusCode != 200) {
             return null
         }
-        return httpResponseReader.onAndOffTimes(status)
+        return try {
+            return httpResponseReader.schedule(status)
+        } catch (e: Exception) {
+            Log.w(LOG_TAG, "could not get schedule: ${status.jsonArray}" )
+            null
+        }
     }
 
     private fun pollCommandStatus(id: String, maxWaitTimeInSeconds: Int = 1): Boolean {

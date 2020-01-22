@@ -1,0 +1,14 @@
+Add ability to pause and resume
+Show when blink is not available (grey out map?)
+Show reason for blink being available (not initialised, paused, out of schedule, unknown)
+
+add settings
+
+prevent notification on app pause? wait until it is destroyed? should we use a background service?
+
+
+nicer looking UI, take assets from blink?
+rename?
+
+add more sophisticated scheduling?
+

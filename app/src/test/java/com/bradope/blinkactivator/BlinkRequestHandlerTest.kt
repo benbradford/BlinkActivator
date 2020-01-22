@@ -27,6 +27,7 @@ class BlinkRequestHandlerTest {
     fun before() {
         MockKAnnotations.init(this)
         every {blinkAccessGuard.canAccessBlink()} returns true
+        every {api.getSchedule()} returns BlinkDailySchedule(null, null)
     }
 
     @Test
@@ -62,7 +63,7 @@ class BlinkRequestHandlerTest {
         every { tracker.getLocationStateForLocation( location) } returns LocationStateTracker.LocationState.OUT
 
         // when
-        val automator = BlinkRequestHandler(
+        val handler = BlinkRequestHandler(
             credentials = credentials,
             blinkApi = api,
             tracker = tracker,
@@ -70,13 +71,13 @@ class BlinkRequestHandlerTest {
             listener = listener,
             blinkSettings = settings
         )
-        automator.begin()
-        automator.newLocation(location)
-        automator.newLocation(location)
-        automator.newLocation(location)
-        automator.pollRequestQueue()
-        automator.pollRequestQueue()
-        automator.pollRequestQueue()
+        handler.begin()
+        handler.newLocation(location)
+        handler.newLocation(location)
+        handler.newLocation(location)
+        handler.pollRequestQueue()
+        handler.pollRequestQueue()
+        handler.pollRequestQueue()
 
         // then
         verify { listener.onStatusRefresh(BlinkArmState.ARMED) }
@@ -93,7 +94,7 @@ class BlinkRequestHandlerTest {
         every { tracker.getLocationStateForLocation( location) } returns LocationStateTracker.LocationState.OUT
 
         // when
-        val automator = BlinkRequestHandler(
+        val handler = BlinkRequestHandler(
             credentials = credentials,
             blinkApi = api,
             tracker = tracker,
@@ -101,11 +102,11 @@ class BlinkRequestHandlerTest {
             listener = listener,
             blinkSettings = settings
         )
-        automator.begin()
-        automator.newLocation(location)
-        automator.newLocation(location)
-        automator.pollRequestQueue()
-        automator.pollRequestQueue()
+        handler.begin()
+        handler.newLocation(location)
+        handler.newLocation(location)
+        handler.pollRequestQueue()
+        handler.pollRequestQueue()
 
         // then
         verify (exactly = 0) { listener.onStatusRefresh(BlinkArmState.ARMED) }
@@ -122,7 +123,7 @@ class BlinkRequestHandlerTest {
         every { tracker.getLocationStateForLocation( location) } returns LocationStateTracker.LocationState.AT_HOME
 
         // when
-        val automator = BlinkRequestHandler(
+        val handler = BlinkRequestHandler(
             credentials = credentials,
             blinkApi = api,
             tracker = tracker,
@@ -130,10 +131,10 @@ class BlinkRequestHandlerTest {
             listener = listener,
             blinkSettings = settings
         )
-        automator.begin()
-        automator.newLocation(location)
+        handler.begin()
+        handler.newLocation(location)
 
-        automator.pollRequestQueue()
+        handler.pollRequestQueue()
 
         // then
         verify { listener.onStatusRefresh(BlinkArmState.DISARMED) }
@@ -152,7 +153,7 @@ class BlinkRequestHandlerTest {
         every { tracker.getLocationStateForLocation( location) } returns LocationStateTracker.LocationState.AT_HOME andThen LocationStateTracker.LocationState.OUT andThen LocationStateTracker.LocationState.AT_HOME
 
         // when
-        val automator = BlinkRequestHandler(
+        val handler = BlinkRequestHandler(
             credentials = credentials,
             blinkApi = api,
             tracker = tracker,
@@ -160,13 +161,13 @@ class BlinkRequestHandlerTest {
             listener = listener,
             blinkSettings = settings
         )
-        automator.begin()
-        automator.newLocation(location)
-        automator.newLocation(location)
-        automator.newLocation(location)
-        automator.pollRequestQueue()
-        automator.pollRequestQueue()
-        automator.pollRequestQueue()
+        handler.begin()
+        handler.newLocation(location)
+        handler.newLocation(location)
+        handler.newLocation(location)
+        handler.pollRequestQueue()
+        handler.pollRequestQueue()
+        handler.pollRequestQueue()
 
         // then
         verify { listener.onStatusRefresh(BlinkArmState.DISARMED) }
@@ -183,7 +184,7 @@ class BlinkRequestHandlerTest {
         every { tracker.getLocationStateForLocation( location) } returns LocationStateTracker.LocationState.OUT
 
         // when
-        val automator = BlinkRequestHandler(
+        val handler = BlinkRequestHandler(
             credentials = credentials,
             blinkApi = api,
             tracker = tracker,
@@ -191,9 +192,9 @@ class BlinkRequestHandlerTest {
             listener = listener,
             blinkSettings = settings
         )
-        automator.begin()
-        automator.newLocation(location)
-        automator.pollRequestQueue()
+        handler.begin()
+        handler.newLocation(location)
+        handler.pollRequestQueue()
 
         // then
         verify { listener.onStatusRefresh(BlinkArmState.DISARMED)  }
@@ -211,7 +212,7 @@ class BlinkRequestHandlerTest {
         every { tracker.getLocationStateForLocation( location) } returns LocationStateTracker.LocationState.OUT
 
         // when
-        val automator = BlinkRequestHandler(
+        val handler = BlinkRequestHandler(
             credentials = credentials,
             blinkApi = api,
             tracker = tracker,
@@ -219,15 +220,15 @@ class BlinkRequestHandlerTest {
             listener = listener,
             blinkSettings = settings
         )
-        automator.begin()
+        handler.begin()
 
-        automator.newLocation(location)
-        automator.newLocation(location)
-        automator.newLocation(location)
+        handler.newLocation(location)
+        handler.newLocation(location)
+        handler.newLocation(location)
 
-        automator.pollRequestQueue()
-        automator.pollRequestQueue()
-        automator.pollRequestQueue()
+        handler.pollRequestQueue()
+        handler.pollRequestQueue()
+        handler.pollRequestQueue()
 
         // then
         verify(exactly = 1) { listener.onStatusRefresh(BlinkArmState.DISARMED)  }

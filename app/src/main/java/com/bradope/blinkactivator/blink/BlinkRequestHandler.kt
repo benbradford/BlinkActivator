@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 interface BlinkListener {
     fun onRegister(success: Boolean)
     fun onStatusRefresh(state: BlinkArmState)
-    fun onScheduleRefresh(onAndOffTimes: BlinkOnAndOffTimes)
+    fun onScheduleRefresh(dailySchedule: BlinkDailySchedule)
 }
 
 class BlinkRequestHandler(
@@ -163,13 +163,14 @@ class BlinkRequestHandler(
     }
 
     private fun refreshScheule(lastWaitTime: Int = 1): Boolean {
-        var onOffTimes = blinkApi.getSchedule()
-        if (onOffTimes == null) {
+        Log.i(LOG_TAG, "refreshing schedule")
+        var blinkScheduleTimes = blinkApi.getSchedule()
+        if (blinkScheduleTimes == null) {
             Log.w(LOG_TAG, "invalid schedule - will retry")
             return withBackOff(::refreshScheule, lastWaitTime)
         }
-
-        listener?.onScheduleRefresh(onOffTimes)
+        Log.i(LOG_TAG, "updating listener")
+        listener?.onScheduleRefresh(blinkScheduleTimes)
         return true
     }
 

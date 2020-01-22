@@ -18,10 +18,7 @@ data class BlinkSettings (
 
     var renewSessionIntervalInSeconds: Int = 60 * 60,
     var refreshStatusIntervalInSeconds: Int = 60 * 1,
-    var checkScheduleIntervalInSeconds: Int = 55 * 1,
-
-    var enableAfterTime: HoursAndMins? = null,
-    var disableAfterTime: HoursAndMins? = null,
+    var checkScheduleIntervalInSeconds: Int = 60 * 5,
 
     var locationUpdateIntervalInMS: Long = 10000L,
     var fastestLocationUpdateIntervalInMS: Long = 1000L

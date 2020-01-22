@@ -3,40 +3,42 @@ package com.bradope.blinkactivator.blink
 import android.content.Context
 import android.location.Location
 import android.os.Looper
+import android.util.Log
 import com.bradope.blinkactivator.R
 import com.google.android.gms.location.*
-import com.google.android.gms.tasks.Task
 
 interface BlinkAccessListener {
     fun onConnectToBlink(success: Boolean)
     fun onStatusChange()
 }
 
-private var listener: BlinkAccessListener? = null
+private var clientListener: BlinkAccessListener? = null
 
 class BlinkHandlerListener: BlinkListener{
     override fun onRegister(success: Boolean) {
-        if (listener != null) {
-            listener!!.onConnectToBlink(success)
+        if (clientListener != null) {
+            clientListener!!.onConnectToBlink(success)
         }
     }
 
     override fun onStatusRefresh(state: BlinkArmState) {
-        if (listener != null) {
-            listener!!.onStatusChange()
+        if (clientListener != null) {
+            clientListener!!.onStatusChange()
         }
     }
 
-    override fun onScheduleRefresh(onAndOffTimes: BlinkOnAndOffTimes) {
-        blinkOnOffTimes.enableAfterTime = onAndOffTimes.enableAfterTime
-        blinkOnOffTimes.disableAfterTime = onAndOffTimes.disableAfterTime
+    override fun onScheduleRefresh(newSchedule: BlinkDailySchedule) {
+        Log.i("bradope_log_access", "onScheduleRefresh $newSchedule")
+        blinkDailySchedule.scheduledDisarmTime = newSchedule.scheduledDisarmTime
+        blinkDailySchedule.scheduledArmTime = newSchedule.scheduledArmTime
+        blinkScheduleHandler?.performCheck()
     }
 }
 
 private var blinkApi: BlinkApi? = null
 private var blinkRequestHandler: BlinkRequestHandler? = null
 private var blinkAutomator: BlinkAutomator? = null
-private val blinkOnOffTimes = BlinkOnAndOffTimes(null, null)
+private val blinkDailySchedule = BlinkDailySchedule(null, null)
 private var fusedLocationClient: FusedLocationProviderClient? = null
 private var blinkScheduleHandler: BlinkScheduleHandler? = null
 private var blinkAccessGuard: BlinkAccessGuard? = null
@@ -49,17 +51,37 @@ fun blinkInit(context: Context) {
     if (blinkRequestHandler == null) {
 
         val credentials = createCredentials(context)
-
+        locationCallback = createLocationCallback()
         blinkApi = BlinkApi(blinkSettings = blinkSettings)
         blinkAccessGuard = BlinkAccessGuard()
         blinkRequestHandler = createRequestHandler(credentials)
         blinkScheduleHandler = createScheduleHandler()
         blinkAutomator = createAutomator()
         blinkAutomator!!.start()
-        locationCallback = createLocationCallback()
+
 
         createFusedLocationClient(context)
     }
+}
+
+fun blinkPause() {
+    if (blinkRequestHandler == null) return
+    blinkAccessGuard!!.pauseAccess()
+}
+
+fun blinkResume() {
+    if (blinkRequestHandler == null) return
+    blinkAccessGuard!!.resumeAccess()
+}
+
+fun blinkCanAccess(): Boolean {
+    if (blinkRequestHandler == null) return false
+    return blinkAccessGuard!!.canAccessBlink()
+}
+
+fun blinkIsUserInitiatedPause(): Boolean {
+    if (blinkRequestHandler == null) return false
+    return blinkAccessGuard!!.isPaused()
 }
 
 fun blinkAddLocation(location: Location) {
@@ -73,7 +95,7 @@ fun blinkStatusRefresh() {
 }
 
 fun blinkSetListener(accessListener: BlinkAccessListener?) {
-    listener = accessListener
+    clientListener = accessListener
 }
 
 fun blinkQuit() {
@@ -132,7 +154,7 @@ private fun createCredentials(context: Context): Credentials {
 
 private fun createScheduleHandler() = BlinkScheduleHandler(
         blinkAccessGuard = blinkAccessGuard!!,
-        onOffTimes = blinkOnOffTimes,
+        onOffTimes = blinkDailySchedule,
         hoursAndMinsFactory = DefaultHoursAndMinsFactory()
     )
 
@@ -152,8 +174,8 @@ private fun createAutomator() = BlinkAutomator(
 private fun createLocationCallback() = (object: LocationCallback() {
     override fun onLocationResult(locationResult: LocationResult) {
         super.onLocationResult(locationResult)
-        blinkAddLocation(locationResult.lastLocation)
-        listener!!.onStatusChange()
+        if (locationResult.lastLocation != null) blinkAddLocation(locationResult.lastLocation)
+        clientListener?.onStatusChange()
     }
 })
 
@@ -163,7 +185,6 @@ private fun createFusedLocationClient(context: Context) {
     locationRequest.setFastestInterval(fetcher(blinkSettings::fastestLocationUpdateIntervalInMS)())
     locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
 
-
     fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
     fusedLocationClient!!.requestLocationUpdates(locationRequest, locationCallback, Looper.myLooper());
@@ -171,7 +192,7 @@ private fun createFusedLocationClient(context: Context) {
     fusedLocationClient!!.lastLocation.addOnCompleteListener { task ->
         if (task.isSuccessful && task.result != null) {
             blinkAddLocation(task.result!!)
-            listener!!.onStatusChange()
+            clientListener!!.onStatusChange()
         }
     }
 }

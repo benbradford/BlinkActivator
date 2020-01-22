@@ -1,19 +1,23 @@
 package com.bradope.blinkactivator.blink
 
-data class BlinkOnAndOffTimes(var enableAfterTime: HoursAndMins?, var disableAfterTime: HoursAndMins?)
+import android.util.Log
+
+// "schedule":[{"action":"arm","devices":[],"dow":["sun","mon","tue","wed","thu","fri","sat"],"id":0,"time":"2020-01-07 23:00:00 +0000"},{"action":"disarm","devices":[],"dow":["sun","mon","tue","wed","thu","fri","sat"],"id":1,"time":"2020-01-07 06:15:00 +0000"}],
+data class BlinkDailySchedule(var scheduledDisarmTime: HoursAndMins?, var scheduledArmTime: HoursAndMins?)
 
 open class BlinkScheduleHandler(
     val blinkAccessGuard: BlinkAccessGuard,
     val hoursAndMinsFactory: HoursAndMinsFactory,
-    var onOffTimes: BlinkOnAndOffTimes) {
+    var onOffTimes: BlinkDailySchedule) {
 
     fun performCheck() {
+        Log.i("bradope_log_schedule" ,"performing check")
         blinkAccessGuard.setScheduledToPerformChecks(isScheduledToPerformChecks())
     }
 
     private fun isScheduledToPerformChecks(): Boolean {
-        val enableAfter = onOffTimes.enableAfterTime
-        val disableAfter = onOffTimes.disableAfterTime
+        val enableAfter = onOffTimes.scheduledDisarmTime
+        val disableAfter = onOffTimes.scheduledArmTime
         if (enableAfter == null || disableAfter == null) return true
 
         val now = hoursAndMinsFactory.now()
