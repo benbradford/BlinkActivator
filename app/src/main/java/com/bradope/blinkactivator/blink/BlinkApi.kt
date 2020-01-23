@@ -126,14 +126,12 @@ open class BlinkApi(
 
     fun register(credentials: Credentials): Boolean {
         try {
-            Log.i(LOG_TAG, "register with blink")
             val res = httpGetter.get(
                 url = "https://rest.prod.immedia-semi.com/login",
                 headers = requiredHeaders(),
                 data = createBody(credentials),
                 timeout = apiTimeout()
             )
-            Log.i(LOG_TAG, "register with blink got res " + res.statusCode)
 
             if (res.statusCode == 200) {
                 currentSession = BlinkApiSession(
@@ -146,7 +144,7 @@ open class BlinkApi(
             Log.e(LOG_TAG, "registerWithBlink error response: " + res.statusCode)
            return false
         } catch (e: Exception) {
-            Log.i(LOG_TAG , "exception " + e)
+            Log.e(LOG_TAG , "registerWithBlink exception " + e)
             return false
         }
     }
@@ -214,7 +212,6 @@ open class BlinkApi(
             timeout = apiTimeout()
         )
 
-        Log.i(LOG_TAG,"disarmed $status")
         if (status.statusCode == 200) {
             return status.statusCode == 200 && pollCommandStatus(httpResponseReader.statusId(status))
         } else {

@@ -22,24 +22,30 @@ class ForegroundService : Service(), BlinkAccessListener {
 
     private val id = nextId()
     companion object {
+        private var isServiceRunning = false
+        private val LOG_TAG = "bradope_log_service"
         private var ID = 1
         fun nextId() = ID++
         fun startService(context: Context, message: String) {
-            Log.i("bradope_log_service", "STARTSERVICE")
+            if (isServiceRunning) return
+            Log.i(LOG_TAG, "STARTSERVICE")
+            isServiceRunning = true
             val startIntent = Intent(context, ForegroundService::class.java)
             startIntent.putExtra("inputExtra", message)
             ContextCompat.startForegroundService(context, startIntent)
 
         }
         fun stopService(context: Context) {
-            Log.i("bradope_log_service", "STOPSERVICE")
+            if (!isServiceRunning) return
+            Log.i(LOG_TAG, "STOPSERVICE")
+            isServiceRunning = false
             val stopIntent = Intent(context, ForegroundService::class.java)
             context.stopService(stopIntent)
         }
     }
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         blinkRecreateLocationRequestClient(this)
-        Log.i("bradope_log_service", "onStartCommand for ${id}")
+        Log.i(LOG_TAG, "onStartCommand for ${id}")
         blinkSetListener(this)
         lastStatus = blinkGetLastBlinkState()
         //do heavy work on a background thread
@@ -68,16 +74,16 @@ class ForegroundService : Service(), BlinkAccessListener {
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.i("bradope_log_service", "onDestroy $id")
+        Log.i(LOG_TAG, "onDestroy $id")
     }
 
     override fun onBind(intent: Intent): IBinder? {
-        Log.i("bradope_log_service", "on bind")
+        Log.i(LOG_TAG, "on bind")
         return null
     }
 
     override fun onConnectToBlink(success: Boolean) {
-        Log.i("bradope_log_service", " service on connect to blink $success")
+        Log.i(LOG_TAG, " service on connect to blink $success")
     }
 
     override fun onStatusChange() {
@@ -85,7 +91,7 @@ class ForegroundService : Service(), BlinkAccessListener {
 
         if (lastStatus != BlinkArmState.UNKNOWN && newArmState != lastStatus) {
             val text = "$lastStatus -> $newArmState"
-            Log.i("bradope_log_service", " sending notification $text")
+            Log.i(LOG_TAG, " sending notification $text")
             val notificationIntent = Intent(this, BlinkActivity::class.java)
             val pendingIntent = PendingIntent.getActivity(
                 this,

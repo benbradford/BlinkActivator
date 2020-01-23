@@ -7,6 +7,7 @@ import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.ViewTreeObserver
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -21,6 +22,7 @@ import kotlinx.android.synthetic.main.activity_maps.*
 import java.lang.Exception
 import kotlin.concurrent.thread
 import kotlin.math.sqrt
+import android.widget.ArrayAdapter
 
 class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallback {
 
@@ -47,6 +49,7 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.i("bradope_log_activity", "oncreate")
+        ForegroundService.stopService(this)
         setContentView(R.layout.activity_maps)
 
         val mapFragment = supportFragmentManager
@@ -94,8 +97,8 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
             }
         }
 
-        settingsButton.setOnClickListener { showSettingsMenu() }
-        closeSettings.setOnClickListener{ closeSettingsMenu() }
+        locationPrioritySpinner.setAdapter(ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, LocationPriority.values()))
+        settingsButton.setOnClickListener { SettingsPage() }
 
         thread {
             while (isDestroyed() == false) {
@@ -116,6 +119,7 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
 
     override fun onResume() {
         super.onResume()
+        ForegroundService.stopService(this)
         Log.i("bradope_log_activity", "resume")
         blinkRecreateLocationRequestClient(this)
         blinkSetListener(this)
@@ -138,20 +142,6 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
 
     override fun onStatusChange() {
         //showStatus()
-    }
-
-    private fun showSettingsMenu() {
-        runOnUiThread {
-            settings_menu.visibility = View.VISIBLE
-            mainScreenLayout.visibility = View.GONE
-        }
-    }
-
-    private fun closeSettingsMenu() {
-        runOnUiThread {
-            settings_menu.visibility = View.GONE
-            mainScreenLayout.visibility = View.VISIBLE
-        }
     }
 
     private fun checkPermissions(): Boolean {
@@ -208,12 +198,46 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
         })
     }
 
-    fun distToHome(location: Location): Double{
+    private fun distToHome(location: Location): Double{
         val lat = location.latitude - homeLocation.latitude
         val lon = location.longitude - homeLocation.longitude
         val distSquared = (lat*lat) + (lon*lon)
         return sqrt(distSquared) * 1000
 
     }
-    fun Double.format(digits: Int) = "%.${digits}f".format(this)
+    private fun Double.format(digits: Int) = "%.${digits}f".format(this)
+
+    inner class SettingsPage {
+
+        val locationPriorityAtStart = selectedPriorty()
+        init {
+            runOnUiThread {
+                settings_menu.visibility = View.VISIBLE
+                mainScreenLayout.visibility = View.GONE
+                closeSettings.setOnClickListener{ closeSettingsMenu() }
+            }
+
+        }
+
+        private fun selectedPriorty() =  LocationPriority.valueOf(locationPrioritySpinner.selectedItem.toString())
+
+        private fun closeSettingsMenu() {
+            runOnUiThread {
+                settings_menu.visibility = View.GONE
+                mainScreenLayout.visibility = View.VISIBLE
+            }
+
+            val changedLocationPriority = selectedPriorty()
+            var needToUpdateLocationSettings = false
+            if (changedLocationPriority != locationPriorityAtStart) {
+                blinkGetSettings().locationPriority = changedLocationPriority!!
+                needToUpdateLocationSettings = true
+            }
+
+
+            if (needToUpdateLocationSettings) {
+                blinkRecreateLocationRequestClient(this@BlinkActivity)
+            }
+        }
+    }
 }

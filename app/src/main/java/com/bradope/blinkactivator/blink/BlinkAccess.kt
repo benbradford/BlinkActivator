@@ -183,7 +183,7 @@ private fun createFusedLocationClient(context: Context) {
     val locationRequest = LocationRequest()
     locationRequest.setInterval(fetcher(blinkSettings::locationUpdateIntervalInMS)())
     locationRequest.setFastestInterval(fetcher(blinkSettings::fastestLocationUpdateIntervalInMS)())
-    locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+    locationRequest.setPriority(fetcher(blinkSettings::locationPriority)().mapToValue())
 
     fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
