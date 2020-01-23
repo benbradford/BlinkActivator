@@ -31,7 +31,7 @@ class BlinkRequestHandler(
 
     data class Request(val type: RequestType, val data: Any?)
 
-    private val fetchMaxStatusRefreshBackoffTime = fetcher(blinkSettings::maxStatusRefreshBackoffTimeInSeconds)
+    private val fetchMaxStatusRefreshBackoffTime = getSettingFetcher(blinkSettings::maxStatusRefreshBackoffTimeInSeconds)
     private val blinkArmMonitor = BlinkArmMonitor(blinkApi, blinkSettings)
     private var lastKnownBlinkArmState = BlinkArmState.UNKNOWN
     private var lastKnownLocationState = LocationStateTracker.LocationState.UNKNOWN

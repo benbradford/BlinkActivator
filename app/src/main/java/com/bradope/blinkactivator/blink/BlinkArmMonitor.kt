@@ -6,7 +6,7 @@ class BlinkArmMonitor(
     val blinkApi: BlinkApi,
     blinkSettings: BlinkSettings
 ) {
-    val fetchNumLocationLogsOutToArm = fetcher(blinkSettings::numLocationLogsOutToArm)
+    val fetchNumLocationLogsOutToArm = getSettingFetcher(blinkSettings::numLocationLogsOutToArm)
 
     var numConsecutiveOutLogs = 0
     var numConsecutiveHomeLogs = 0

@@ -119,8 +119,8 @@ open class BlinkApi(
     private val LOG_TAG = "bradope_log " + BlinkApiSession::class.java.simpleName
 
     private var currentSession: BlinkApiSession? = null
-    private val apiTimeout = fetcher(blinkSettings::apiCallTimeoutInSeconds)
-    private val maxCommandStatusCheckBackoffTime = fetcher(blinkSettings::maxCommandStatusCheckBackoffTimeInSeconds)
+    private val apiTimeout = getSettingFetcher(blinkSettings::apiCallTimeoutInSeconds)
+    private val maxCommandStatusCheckBackoffTime = getSettingFetcher(blinkSettings::maxCommandStatusCheckBackoffTimeInSeconds)
 
     fun getSession() = currentSession // for testing
 

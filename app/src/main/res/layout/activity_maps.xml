@@ -25,20 +25,20 @@
                 <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Location Update Interval In Seconds"/>
+                        android:text="Location Update Interval"/>
                 <Button
-                        android:id="@+id/increaseLocationUpdateIntervalTextView"
+                        android:id="@+id/locationUpdateIntervalDecrease"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:text="-"/>
                 <TextView
                         android:id="@+id/locationUpdateIntervalTextView"
-                        android:layout_width="20dp"
+                        android:layout_width="30dp"
                         android:layout_height="30dp"
-                        android:text="10"
+                        android:text="10s"
                         android:textAlignment="viewEnd"/>
                 <Button
-                        android:id="@+id/reduceLocationUpdateIntervalTextView"
+                        android:id="@+id/locationUpdateIntervalIncrease"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:text="+"/>
@@ -55,18 +55,18 @@
                         android:layout_height="wrap_content"
                         android:text="Fastest Location Update In Seconds"/>
                 <Button
-                        android:id="@+id/increasefastestLocationUpdateIntervalTextView"
+                        android:id="@+id/fastestLocationUpdateIntervalDecrease"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:text="-"/>
                 <TextView
-                        android:id="@+id/fastestlocationUpdateIntervalTextView"
-                        android:layout_width="20dp"
+                        android:id="@+id/fastestLocationUpdateIntervalTextView"
+                        android:layout_width="30dp"
                         android:layout_height="30dp"
-                        android:text="1"
+                        android:text="1s"
                         android:textAlignment="viewEnd"/>
                 <Button
-                        android:id="@+id/reducefasteswtLocationUpdateIntervalTextView"
+                        android:id="@+id/fastestLocationUpdateIntervalIncrease"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:text="+"/>

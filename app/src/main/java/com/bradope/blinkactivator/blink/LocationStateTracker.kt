@@ -10,8 +10,8 @@ open class LocationStateTracker(blinkSettings: BlinkSettings) {
         UNKNOWN
     }
 
-    val homeLocationFetcher = fetcher(blinkSettings::homeLocation)
-    val minDistanceFromHomeFetcher = fetcher(blinkSettings::minDistFromHome)
+    val homeLocationFetcher = getSettingFetcher(blinkSettings::homeLocation)
+    val minDistanceFromHomeFetcher = getSettingFetcher(blinkSettings::minDistFromHome)
 
     fun getLocationStateForLocation(location: Location): LocationState {
         val lat = location.latitude - homeLocationFetcher().latitude

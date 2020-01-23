@@ -6,6 +6,7 @@ import android.app.PendingIntent
 import android.app.Service
 import android.content.Context
 import android.content.Intent
+import android.location.Location
 import android.os.Build
 import android.os.IBinder
 import android.util.Log
@@ -18,7 +19,7 @@ class ForegroundService : Service(), BlinkAccessListener {
 
     private val NOTIFICATION_ID = 123
     private val CHANNEL_ID = "ForegroundService Kotlin"
-    private var lastStatus: BlinkArmState = BlinkArmState.UNKNOWN
+
 
     private val id = nextId()
     companion object {
@@ -47,7 +48,6 @@ class ForegroundService : Service(), BlinkAccessListener {
         blinkRecreateLocationRequestClient(this)
         Log.i(LOG_TAG, "onStartCommand for ${id}")
         blinkSetListener(this)
-        lastStatus = blinkGetLastBlinkState()
         //do heavy work on a background thread
         val input = intent?.getStringExtra("inputExtra")
         createNotificationChannel()
@@ -86,11 +86,8 @@ class ForegroundService : Service(), BlinkAccessListener {
         Log.i(LOG_TAG, " service on connect to blink $success")
     }
 
-    override fun onStatusChange() {
-        val newArmState = blinkGetLastBlinkState()
-
-        if (lastStatus != BlinkArmState.UNKNOWN && newArmState != lastStatus) {
-            val text = "$lastStatus -> $newArmState"
+    override fun onStatusChange(lastStatus: BlinkArmState, newStatus: BlinkArmState) {
+            val text = "$lastStatus -> $newStatus"
             Log.i(LOG_TAG, " sending notification $text")
             val notificationIntent = Intent(this, BlinkActivity::class.java)
             val pendingIntent = PendingIntent.getActivity(
@@ -114,9 +111,13 @@ class ForegroundService : Service(), BlinkAccessListener {
                 // notificationId is a unique int for each notification that you must define
                 notify(NOTIFICATION_ID, notification)
             }
-        }
-        lastStatus = newArmState
+
     }
+
+    override fun onLocationChange(location: Location) {
+        // nothing to do
+    }
+
 
     private fun createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

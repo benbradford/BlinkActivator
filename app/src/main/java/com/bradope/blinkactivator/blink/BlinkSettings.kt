@@ -2,6 +2,7 @@ package com.bradope.blinkactivator.blink
 
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.maps.model.LatLng
+import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty
 
 interface LocationPriorityIntMap {
@@ -25,13 +26,20 @@ data class BlinkSettings (
     var maxCommandStatusCheckBackoffTimeInSeconds: Int = 10,
     var apiCallTimeoutInSeconds: Double = 10.0,
 
-    var renewSessionIntervalInSeconds: Int = 60 * 60,
-    var refreshStatusIntervalInSeconds: Int = 60 * 1,
-    var checkScheduleIntervalInSeconds: Int = 60 * 5,
+    var renewSessionIntervalInMinutes: Int = 60,
+    var refreshStatusIntervalInMinutes: Int = 1,
+    var checkScheduleIntervalInMinutes: Int = 5,
 
-    var locationUpdateIntervalInMS: Long = 10000L,
-    var fastestLocationUpdateIntervalInMS: Long = 1000L,
+    var locationUpdateIntervalInSeconds: Int = 10,
+    var fastestLocationUpdateIntervalInSeconds: Int = 1,
     var locationPriority: LocationPriority = LocationPriority.HIGH_ACCURACY
  )
 
-fun <T> fetcher(field: KProperty<T>): () -> T = { -> field.call() }
+fun <T> getSettingFetcher(field: KProperty<T>): () -> T = { -> field.call() }
+fun <T> syncSettingIfChanged(option: T, prop: KMutableProperty<T>): Boolean {
+    if (option != prop.call()) {
+        prop.setter.call(option)
+        return true
+    }
+    return false
+}

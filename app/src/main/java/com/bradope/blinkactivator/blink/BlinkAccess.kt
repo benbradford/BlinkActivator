@@ -9,12 +9,14 @@ import com.google.android.gms.location.*
 
 interface BlinkAccessListener {
     fun onConnectToBlink(success: Boolean)
-    fun onStatusChange()
+    fun onStatusChange(previousState: BlinkArmState, newState: BlinkArmState)
+    fun onLocationChange(location: Location)
 }
 
 private var clientListener: BlinkAccessListener? = null
 
 class BlinkHandlerListener: BlinkListener{
+    private var lastStatus: BlinkArmState = BlinkArmState.UNKNOWN
     override fun onRegister(success: Boolean) {
         if (clientListener != null) {
             clientListener!!.onConnectToBlink(success)
@@ -23,7 +25,11 @@ class BlinkHandlerListener: BlinkListener{
 
     override fun onStatusRefresh(state: BlinkArmState) {
         if (clientListener != null) {
-            clientListener!!.onStatusChange()
+            val newArmState = blinkGetLastBlinkState()
+            if (lastStatus != BlinkArmState.UNKNOWN && newArmState != lastStatus) {
+                clientListener!!.onStatusChange(lastStatus, newArmState)
+            }
+            lastStatus = newArmState
         }
     }
 
@@ -175,15 +181,15 @@ private fun createLocationCallback() = (object: LocationCallback() {
     override fun onLocationResult(locationResult: LocationResult) {
         super.onLocationResult(locationResult)
         if (locationResult.lastLocation != null) blinkAddLocation(locationResult.lastLocation)
-        clientListener?.onStatusChange()
+
     }
 })
 
 private fun createFusedLocationClient(context: Context) {
     val locationRequest = LocationRequest()
-    locationRequest.setInterval(fetcher(blinkSettings::locationUpdateIntervalInMS)())
-    locationRequest.setFastestInterval(fetcher(blinkSettings::fastestLocationUpdateIntervalInMS)())
-    locationRequest.setPriority(fetcher(blinkSettings::locationPriority)().mapToValue())
+    locationRequest.setInterval(blinkSettings.locationUpdateIntervalInSeconds * 1000L)
+    locationRequest.setFastestInterval(blinkSettings.fastestLocationUpdateIntervalInSeconds * 1000L)
+    locationRequest.setPriority(blinkSettings.locationPriority.mapToValue())
 
     fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
@@ -192,7 +198,7 @@ private fun createFusedLocationClient(context: Context) {
     fusedLocationClient!!.lastLocation.addOnCompleteListener { task ->
         if (task.isSuccessful && task.result != null) {
             blinkAddLocation(task.result!!)
-            clientListener!!.onStatusChange()
+            clientListener!!.onLocationChange(task.result!!)
         }
     }
 }
