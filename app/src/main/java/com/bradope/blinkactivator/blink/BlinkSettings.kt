@@ -18,7 +18,7 @@ enum class LocationPriority: LocationPriorityIntMap {
 
 data class BlinkSettings (
     var homeLocation: LatLng = LatLng(0.0, 0.0),
-    var minDistFromHome: Double = 0.001583,
+    var minDistFromHome: Int = 158,
 
     var numLocationLogsOutToArm: Int = 3,
 

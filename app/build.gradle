@@ -44,6 +44,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation "io.karn:khttp-android:0.1.0"
     implementation "org.jetbrains.kotlin:kotlin-reflect:$kotlin_version"
+    implementation 'com.google.code.gson:gson:2.8.6'
     testImplementation 'junit:junit:4.12'
     testImplementation "io.mockk:mockk:1.9.3"
     androidTestImplementation 'androidx.test:runner:1.2.0'

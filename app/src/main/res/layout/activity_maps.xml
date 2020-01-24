@@ -20,76 +20,118 @@
             <LinearLayout
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal" >
+                    android:orientation="vertical"
+                    android:layout_margin="20.0dp"
+                    android:backgroundTint="@color/common_google_signin_btn_text_light_focused">
 
                 <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Location Update Interval"/>
-                <Button
-                        android:id="@+id/locationUpdateIntervalDecrease"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:text="-"/>
-                <TextView
-                        android:id="@+id/locationUpdateIntervalTextView"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
-                        android:text="10s"
-                        android:textAlignment="viewEnd"/>
-                <Button
-                        android:id="@+id/locationUpdateIntervalIncrease"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:text="+"/>
+                        android:text="Location Update Interval"
+                        android:textAlignment="center"/>
 
+                <SeekBar
+                        android:id="@+id/locationUpdateSeekBar"
+                        android:max="30"
+                        android:progress="10"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                <TextView
+                        android:id="@+id/locationUpdateLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="10"
+                        android:textAlignment="center"/>
+                <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@android:color/darker_gray"/>
             </LinearLayout>
 
             <LinearLayout
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal" >
+                    android:orientation="vertical"
+                    android:layout_margin="20.0dp"
+                    android:backgroundTint="@color/common_google_signin_btn_text_light_focused">
 
                 <TextView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Fastest Location Update In Seconds"/>
-                <Button
-                        android:id="@+id/fastestLocationUpdateIntervalDecrease"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:text="-"/>
-                <TextView
-                        android:id="@+id/fastestLocationUpdateIntervalTextView"
-                        android:layout_width="30dp"
-                        android:layout_height="30dp"
-                        android:text="1s"
-                        android:textAlignment="viewEnd"/>
-                <Button
-                        android:id="@+id/fastestLocationUpdateIntervalIncrease"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:text="+"/>
+                        android:text="Fastest Location Update Interval"
+                        android:textAlignment="center"/>
 
+                <SeekBar
+                        android:id="@+id/fastestLocationUpdateSeekBar"
+                        android:max="20"
+                        android:progress="3"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                <TextView
+                        android:id="@+id/fastestLocationUpdateLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="3"
+                        android:textAlignment="center"/>
+
+                <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@android:color/darker_gray"/>
             </LinearLayout>
 
-        <LinearLayout
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal" >
+            <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_margin="20.0dp"
+                    android:backgroundTint="@color/common_google_signin_btn_text_light_focused">
 
             <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Location priority                                     "/>
+                    android:textAlignment="center"
+                    android:text="Location priority"/>
 
             <Spinner
                     android:id="@+id/locationPrioritySpinner"
-                    android:layout_width="100dp"
-                    android:layout_height="30dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:background="@android:drawable/btn_dropdown"
                     android:spinnerMode="dropdown"/>
         </LinearLayout>
+
+            <LinearLayout
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:layout_margin="20.0dp"
+                    android:backgroundTint="@color/common_google_signin_btn_text_light_focused">
+
+                <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Home Distance Boundary"
+                        android:textAlignment="center"/>
+
+                <SeekBar
+                        android:id="@+id/homeBoundarySeekbar"
+                        android:max="350"
+                        android:progress="158"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
+                <TextView
+                        android:id="@+id/homeBoundaryLabel"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="158"
+                        android:textAlignment="center"/>
+                <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:background="@android:color/darker_gray"/>
+            </LinearLayout>
+
 
             <RelativeLayout
                     android:layout_width="fill_parent"

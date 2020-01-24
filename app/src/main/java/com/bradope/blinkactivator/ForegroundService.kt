@@ -20,7 +20,6 @@ class ForegroundService : Service(), BlinkAccessListener {
     private val NOTIFICATION_ID = 123
     private val CHANNEL_ID = "ForegroundService Kotlin"
 
-
     private val id = nextId()
     companion object {
         private var isServiceRunning = false
@@ -88,7 +87,6 @@ class ForegroundService : Service(), BlinkAccessListener {
 
     override fun onStatusChange(lastStatus: BlinkArmState, newStatus: BlinkArmState) {
             val text = "$lastStatus -> $newStatus"
-            Log.i(LOG_TAG, " sending notification $text")
             val notificationIntent = Intent(this, BlinkActivity::class.java)
             val pendingIntent = PendingIntent.getActivity(
                 this,

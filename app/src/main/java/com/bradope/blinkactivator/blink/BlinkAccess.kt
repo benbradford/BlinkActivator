@@ -90,6 +90,10 @@ fun blinkIsUserInitiatedPause(): Boolean {
     return blinkAccessGuard!!.isPaused()
 }
 
+fun blinkIsInScheduledArm(): Boolean {
+    return !blinkCanAccess() && !blinkIsUserInitiatedPause()
+}
+
 fun blinkAddLocation(location: Location) {
     if (blinkRequestHandler == null) return
     blinkRequestHandler!!.newLocation(location)

@@ -1,15 +1,15 @@
 package com.bradope.blinkactivator
 
 import android.Manifest
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.location.Location
 import android.os.Bundle
 import android.util.Log
 import android.view.View
-import android.view.ViewTreeObserver
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import com.bradope.blinkactivator.blink.*
@@ -21,30 +21,31 @@ import com.google.android.gms.maps.model.*
 import kotlinx.android.synthetic.main.activity_maps.*
 import java.lang.Exception
 import kotlin.concurrent.thread
-import kotlin.math.sqrt
-import android.widget.ArrayAdapter
-import android.widget.Button
+import com.google.gson.Gson
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.KProperty
+import kotlin.reflect.full.memberProperties
 
 class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallback {
+    companion object val LOG_TAG = "bradope_log_activity"
 
     private val REQUEST_PERMISSIONS_REQUEST_CODE = 34
     private lateinit var homeLocation: LatLng
     private var googleMap: GoogleMap? = null
     private var marker: Marker? = null
+    var homeCircle: Circle? = null
     private var myLocation: LatLng? = null
     private var userQuit = false
 
     override fun onMapReady(googleMap: GoogleMap) {
-        Log.i("bradope_log_activity", "onmapready")
+        Log.i(LOG_TAG, "onmapready")
         this.googleMap = googleMap
         drawHomeCircle()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Log.i("bradope_log_activity", "oncreate")
+        Log.i(LOG_TAG, "oncreate")
         ForegroundService.stopService(this)
         setContentView(R.layout.activity_maps)
 
@@ -71,22 +72,23 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
 
     override fun onPause() {
         super.onPause()
-        Log.i("bradope_log_activity", "pause")
+        Log.i(LOG_TAG, "pause")
         if (!userQuit)
             ForegroundService.startService(this, "service is running")
     }
 
     override fun onResume() {
         super.onResume()
+
         ForegroundService.stopService(this)
-        Log.i("bradope_log_activity", "resume")
+        Log.i(LOG_TAG, "resume")
         blinkRecreateLocationRequestClient(this)
         blinkSetListener(this)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        Log.i("bradope_log_activity", "onDestroy")
+        Log.i(LOG_TAG, "onDestroy")
     }
 
     override fun onConnectToBlink(success: Boolean) {
@@ -99,14 +101,14 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
         })
     }
 
-    override fun onStatusChange(lastStatus: BlinkArmState, newStatus: BlinkArmState) {
-        runOnUiThread(java.lang.Runnable {
+    override fun onStatusChange(previousState: BlinkArmState, newState: BlinkArmState) {
+        runOnUiThread{
             Toast.makeText(
                 this,
-                "BLink Status: $lastStatus -> $newStatus",
+                "BLink Status: $previousState -> $newState",
                 Toast.LENGTH_LONG
             ).show()
-        })
+        }
     }
 
     override fun onLocationChange(location: Location) {
@@ -119,7 +121,7 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
 
             Thread.sleep(1000)
         }
-        Log.i("bradope_log_activity", "thread destroyed")
+        Log.i(LOG_TAG, "thread destroyed")
     }
 
     private fun setButtonListeners() {
@@ -151,7 +153,10 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
                 googleMap!!.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
             }
         }
-        settingsButton.setOnClickListener { SettingsPage() }
+        settingsButton.setOnClickListener {
+            SettingsPage()
+
+        }
     }
 
     private fun updateAndDrawLocation(location: LatLng) {
@@ -173,12 +178,13 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
 
     private fun drawHomeCircle() {
         runOnUiThread {
-            val homeCircle = CircleOptions()
+            val homeCircleOptions = CircleOptions()
                 .center(homeLocation)
-                .radius(blinkGetSettings().minDistFromHome * 100000)
+                .radius(blinkGetSettings().minDistFromHome.toDouble())
                 .clickable(true)
                 .strokeColor(Color.RED)
-            googleMap!!.addCircle(homeCircle)
+            homeCircle?.remove()
+            homeCircle = googleMap!!.addCircle(homeCircleOptions)
             googleMap!!.moveCamera(CameraUpdateFactory.newLatLngZoom(homeLocation, 16.0f))
         }
     }
@@ -215,41 +221,72 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
     private fun showStatus() {
         runOnUiThread(java.lang.Runnable {
             try {
-                text.setText("Blink Status: ${blinkGetLastBlinkState().toString()}")
+                if (blinkIsInScheduledArm()) {
+                    text.setText("Blink Status: Scheduled Arm")
+                } else {
+                    text.setText("Blink Status: ${blinkGetLastBlinkState().toString()}")
+                }
 
                 val lastLocation = blinkGetLastLocation()
                 if (lastLocation != null) {
                     val newLoc = LatLng(lastLocation.latitude, lastLocation.longitude)
 
-                    locState.setText("${blinkGetLastLocationState().toString()} - ${distToHome(lastLocation).format(2)}")
+                    locState.setText("Location Status: ${blinkGetLastLocationState().toString()}")
 
                     if (googleMap != null) updateAndDrawLocation(newLoc)
                 }
             } catch ( e: Exception) {
-                Log.e("bradope_log_activity", " e: ${e.message}")
+                Log.e(LOG_TAG, " e: ${e.message}")
             }
         })
     }
 
-    private fun syncSettingsWithStorage(blinkSettings: BlinkSettings) {
-        // :TODO:
+    private fun writeSettingsToStorage(blinkSettings: BlinkSettings) {
+        try {
+            val prefs = getSharedPreferences("blink_settings", Context.MODE_PRIVATE).edit()
+            prefs.putBoolean("hasData", true)
+            prefs.putString("settings", Gson().toJson(blinkSettings))
+            prefs.apply()
+        } catch ( e: Exception ) {
+            Log.e(LOG_TAG, "Problem writing to storage " + e)
+        }
     }
 
     private fun loadSettingsFromStorage(blinkSettings: BlinkSettings) {
-
+        try {
+            val prefs = getSharedPreferences("blink_settings", Context.MODE_PRIVATE)
+            if (!prefs.getBoolean("hasData", false)) return
+            val newSettings = Gson().fromJson<BlinkSettings>(
+                prefs.getString("settings", ""),
+                BlinkSettings::class.java
+            )
+            for (prop in blinkSettings::class.memberProperties) {
+                val other = newSettings::class.members.find { it.name == prop.name }
+                val value = other!!.call(newSettings)
+                val mutableProp = (prop as KMutableProperty<R>)
+                mutableProp.setter.call(blinkSettings, value)
+            }
+        } catch (e: Exception) {
+            Log.e(LOG_TAG, "unable to load settings " + e)
+        }
     }
-
-    private fun distToHome(location: Location): Double{
-        val lat = location.latitude - homeLocation.latitude
-        val lon = location.longitude - homeLocation.longitude
-        val distSquared = (lat*lat) + (lon*lon)
-        return sqrt(distSquared) * 1000
-
-    }
-    private fun Double.format(digits: Int) = "%.${digits}f".format(this)
 
     inner class SettingsPage {
 
+        inner class SeekBarBinder(prop: KProperty<Int>, seeker: SeekBar, val label: TextView, val postFix: String): SeekBar.OnSeekBarChangeListener {
+            init {
+                seeker.progress = getSettingFetcher(prop)()
+                label.text = "${seeker.progress}s"
+                seeker.setOnSeekBarChangeListener(this)
+            }
+
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                label.text = "${progress}${postFix}"
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar) {}
+
+        }
         init {
             runOnUiThread {
                 settings_menu.visibility = View.VISIBLE
@@ -265,24 +302,18 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
         private fun syncLabelsWithSettings(blinkSettings: BlinkSettings) {
             locationPrioritySpinner.setSelection(blinkSettings.locationPriority.ordinal)
 
-            setupTweaker(
-                fastestLocationUpdateIntervalDecrease,
-                fastestLocationUpdateIntervalIncrease,
-                fastestLocationUpdateIntervalTextView,
-                blinkSettings::fastestLocationUpdateIntervalInSeconds
-            )
-            setupTweaker(
-                locationUpdateIntervalDecrease,
-                locationUpdateIntervalIncrease,
-                locationUpdateIntervalTextView,
-                blinkSettings::locationUpdateIntervalInSeconds
-            )
-        }
-
-        private fun setupTweaker(decrease: Button, increase: Button, textView: TextView, prop: KProperty<Int>) {
-            textView.text = "${getSettingFetcher(prop)()}s"
-            increase.setOnClickListener { textView.text = "${valueWithoutS(textView.text)+1}s" }
-            decrease.setOnClickListener {textView.text = "${(valueWithoutS(textView.text)-1).coerceAtLeast(1)}s" }
+            SeekBarBinder(blinkSettings::fastestLocationUpdateIntervalInSeconds,
+                fastestLocationUpdateSeekBar,
+                fastestLocationUpdateLabel,
+                "s")
+            SeekBarBinder(blinkSettings::locationUpdateIntervalInSeconds,
+                locationUpdateSeekBar,
+                locationUpdateLabel,
+                "s")
+            SeekBarBinder(blinkSettings::minDistFromHome,
+                homeBoundarySeekbar,
+                homeBoundaryLabel,
+                "m")
         }
 
         private fun valueWithoutS(text: CharSequence) = text.substring(0, text.length - 1).toInt()
@@ -297,24 +328,32 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener, OnMapReadyCallba
 
             var settingsSyncNeeded = changeLocationSettingsIfRequired(blinkSettings)
 
-            // :TODO: check other settings
+            settingsSyncNeeded = changeHomeSettingsIfRequired(blinkSettings) || settingsSyncNeeded
 
             if (settingsSyncNeeded) {
-                syncSettingsWithStorage(blinkSettings)
+                writeSettingsToStorage(blinkSettings)
             }
         }
 
         private fun changeLocationSettingsIfRequired(blinkSettings: BlinkSettings): Boolean {
             val selectedPriorty = LocationPriority.valueOf(locationPrioritySpinner.selectedItem.toString())
             var needToUpdateLocationSettings = syncSettingIfChanged(selectedPriorty, blinkSettings::locationPriority)
-            needToUpdateLocationSettings = syncSettingIfChanged(valueWithoutS(fastestLocationUpdateIntervalTextView.text), blinkSettings::fastestLocationUpdateIntervalInSeconds) || needToUpdateLocationSettings
-            needToUpdateLocationSettings = syncSettingIfChanged(valueWithoutS(locationUpdateIntervalTextView.text), blinkSettings::locationUpdateIntervalInSeconds) || needToUpdateLocationSettings
+            needToUpdateLocationSettings = syncSettingIfChanged(fastestLocationUpdateSeekBar.progress, blinkSettings::fastestLocationUpdateIntervalInSeconds) || needToUpdateLocationSettings
+            needToUpdateLocationSettings = syncSettingIfChanged(locationUpdateSeekBar.progress, blinkSettings::locationUpdateIntervalInSeconds) || needToUpdateLocationSettings
 
             if (needToUpdateLocationSettings) {
                 blinkRecreateLocationRequestClient(this@BlinkActivity)
             }
 
             return needToUpdateLocationSettings
+        }
+
+        private fun changeHomeSettingsIfRequired(blinkSettings: BlinkSettings): Boolean {
+            if (syncSettingIfChanged(homeBoundarySeekbar.progress, blinkSettings::minDistFromHome)) {
+                drawHomeCircle()
+                return true
+            }
+            return false
         }
 
     }

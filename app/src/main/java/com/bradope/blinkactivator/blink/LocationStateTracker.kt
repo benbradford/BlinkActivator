@@ -18,8 +18,8 @@ open class LocationStateTracker(blinkSettings: BlinkSettings) {
         val lon = location.longitude - homeLocationFetcher().longitude
         val distSquared = (lat*lat) + (lon*lon)
         val distance = sqrt(distSquared)
-
-        return if (distance < minDistanceFromHomeFetcher()) LocationState.AT_HOME else LocationState.OUT
+        val minAllowedDistance = minDistanceFromHomeFetcher()/ 100000.0
+        return if (distance < minAllowedDistance) LocationState.AT_HOME else LocationState.OUT
     }
 
 }
