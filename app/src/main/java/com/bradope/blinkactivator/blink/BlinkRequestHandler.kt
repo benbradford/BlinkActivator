@@ -65,9 +65,10 @@ class BlinkRequestHandler(
     }
 
     fun pollRequestQueue() {
-        if (!blinkAccessGuard.canAccessBlink()) return
 
         val request = requestQueue.poll()
+        if (!blinkAccessGuard.canAccessBlink()) return
+
         if (request != null) {
 
             when (request.type) {

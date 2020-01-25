@@ -43,12 +43,13 @@ class ForegroundService : Service(), BlinkAccessListener {
             context.stopService(stopIntent)
         }
     }
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+
+    override fun onCreate() {
+        super.onCreate()
         blinkRecreateLocationRequestClient(this)
         Log.i(LOG_TAG, "onStartCommand for ${id}")
         blinkSetListener(this)
-        //do heavy work on a background thread
-        val input = intent?.getStringExtra("inputExtra")
+
         createNotificationChannel()
         val notificationIntent = Intent(this, BlinkActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(
@@ -61,14 +62,12 @@ class ForegroundService : Service(), BlinkAccessListener {
         )
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Blink Activator")
-            .setContentText(input)
+            .setContentText("service running")
             .setSmallIcon(R.drawable.blink_green)
             .setContentIntent(pendingIntent)
             .setDeleteIntent(deleteIntent)
             .build()
         startForeground(NOTIFICATION_ID, notification)
-        //stopSelf();
-        return START_STICKY
     }
 
     override fun onDestroy() {
