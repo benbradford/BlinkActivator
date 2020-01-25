@@ -69,14 +69,19 @@ class KHttpGetter: HttpGetter {
         data: String,
         timeout: Double
     ): HttpResponse {
-        val response = khttp.get(url=url, headers=headers, data=data, timeout=timeout)
-        if (response.statusCode == 200)
-            return HttpResponse(
-                response.statusCode,
-                response.jsonObject,
-                JSONArray()
-            )
-        return HttpResponse(response.statusCode, JSONObject(), JSONArray())
+        return try {
+            val response = khttp.get(url = url, headers = headers, data = data, timeout = timeout)
+            if (response.statusCode == 200)
+                return HttpResponse(
+                    response.statusCode,
+                    response.jsonObject,
+                    JSONArray()
+                )
+            return HttpResponse(response.statusCode, JSONObject(), JSONArray())
+        } catch (e: java.lang.Exception) {
+            Log.e("bradope_log_api", "exception in get " + e)
+            return HttpResponse(405, JSONObject(), JSONArray())
+        }
     }
 
     override fun getArray(
@@ -85,14 +90,19 @@ class KHttpGetter: HttpGetter {
         data: String,
         timeout: Double
     ): HttpResponse {
-        val response = khttp.get(url=url, headers=headers, data=data, timeout=timeout)
-        if (response.statusCode == 200)
-            return HttpResponse(
-                response.statusCode,
-                JSONObject(),
-                response.jsonArray
-            )
-        return HttpResponse(response.statusCode, JSONObject(), JSONArray())
+        return try {
+            val response = khttp.get(url = url, headers = headers, data = data, timeout = timeout)
+            if (response.statusCode == 200)
+                return HttpResponse(
+                    response.statusCode,
+                    JSONObject(),
+                    response.jsonArray
+                )
+            return HttpResponse(response.statusCode, JSONObject(), JSONArray())
+        }  catch (e: java.lang.Exception) {
+            Log.e("bradope_log_api", "exception in getArray " + e)
+            return HttpResponse(405, JSONObject(), JSONArray())
+        }
     }
 }
 

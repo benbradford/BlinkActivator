@@ -61,7 +61,7 @@ class ForegroundService : Service(), BlinkAccessListener {
             1, notificationIntent, 0
         )
         val notification = NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Blink Activator")
+            .setContentTitle("Blinko")
             .setContentText("service running")
             .setSmallIcon(R.drawable.blink_green)
             .setContentIntent(pendingIntent)

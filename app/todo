@@ -3,15 +3,11 @@ Open, Pause, Stop
 
 
 Add ability to pause and resume in activity
-Show when blink is not available (grey out map?)
-Show reason for blink being available (not initialised, paused, out of schedule, unknown)
-
-add other settings
+Show when blink is paused (grey out map? or just in status message?)
 
 improve handling of when foreground service is launched
 
 nicer looking UI, take assets from blink?
-rename?
+rename? blinko?
 
 add more sophisticated scheduling?
-

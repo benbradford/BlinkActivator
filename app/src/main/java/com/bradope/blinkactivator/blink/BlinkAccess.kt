@@ -146,6 +146,10 @@ fun blinkRecreateLocationRequestClient(context: Context) {
     if (fusedLocationClient != null) {
         fusedLocationClient!!.removeLocationUpdates(locationCallback)
     }
+    if (locationCallback == null) {
+        Log.i("bradope_log_blinkaccess", "recreating init on create location request")
+        blinkInit(context)
+    }
     createFusedLocationClient(context)
 }
 

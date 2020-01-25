@@ -9,7 +9,7 @@ class BlinkAutomator(
     val blinkScheduleHandler: BlinkScheduleHandler,
     blinkSettings: BlinkSettings
 ) {
-    private val fetchRenewSessionInterval = getSettingFetcher(blinkSettings::renewSessionIntervalInMinutes)
+    private val fetchRenewSessionInterval = getSettingFetcher(blinkSettings::renewSessionIntervalInHours)
     private val fetchRefreshStatusInterval= getSettingFetcher(blinkSettings::refreshStatusIntervalInMinutes)
     private val fetchCheckScheduleInterval = getSettingFetcher(blinkSettings::checkScheduleIntervalInMinutes)
 
@@ -52,7 +52,7 @@ class BlinkAutomator(
                 continue
             }
 
-            if (now >= lastRenew + fetchRenewSessionInterval() * 60) {
+            if (now >= lastRenew + fetchRenewSessionInterval() * 60 * 60) {
                 lastRenew = now
                 handler.requestRenewSession()
             } else if (now >= lastRefresh + fetchRefreshStatusInterval() * 60) {

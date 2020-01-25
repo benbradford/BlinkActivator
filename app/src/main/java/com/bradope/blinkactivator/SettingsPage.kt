@@ -6,6 +6,7 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import com.bradope.blinkactivator.blink.*
 import kotlinx.android.synthetic.main.activity_maps.*
+import kotlin.math.atan
 import kotlin.reflect.KProperty
 
 
@@ -14,7 +15,7 @@ class SettingsPage(val activity: AppCompatActivity, val onResume: ()->Unit) {
     inner class SeekBarBinder(prop: KProperty<Int>, seeker: SeekBar, val label: TextView, val postFix: String): SeekBar.OnSeekBarChangeListener {
         init {
             seeker.progress = getSettingFetcher(prop)()
-            label.text = "${seeker.progress}s"
+            label.text = "${seeker.progress}${postFix}"
             seeker.setOnSeekBarChangeListener(this)
         }
 
@@ -48,9 +49,28 @@ class SettingsPage(val activity: AppCompatActivity, val onResume: ()->Unit) {
             activity.locationUpdateSeekBar,
             activity.locationUpdateLabel,
             "s")
+        SeekBarBinder(blinkSettings::numLocationLogsOutToArm,
+            activity.numLogsToArmSeek,
+            activity.numLogsToArmLabel,
+            "")
         SeekBarBinder(blinkSettings::minDistFromHome,
             activity.homeBoundarySeekbar,
             activity.homeBoundaryLabel,
+            "m")
+
+        SeekBarBinder(blinkSettings::renewSessionIntervalInHours,
+            activity.renewSessionSeekbar,
+            activity.renewSessionLabel,
+            "h")
+
+        SeekBarBinder(blinkSettings::refreshStatusIntervalInMinutes,
+            activity.refreshStatusSeekbar,
+            activity.refreshStatusLabel,
+            "m")
+
+        SeekBarBinder(blinkSettings::checkScheduleIntervalInMinutes,
+            activity.refreshScheduleSeekbar,
+            activity.refreshScheduleLabel,
             "m")
     }
 
@@ -63,6 +83,7 @@ class SettingsPage(val activity: AppCompatActivity, val onResume: ()->Unit) {
         var settingsSyncNeeded = changeLocationSettingsIfRequired(blinkSettings)
 
         settingsSyncNeeded = changeHomeSettingsIfRequired(blinkSettings) || settingsSyncNeeded
+        settingsSyncNeeded = changeIntervalSettingsIfRequired(blinkSettings) || settingsSyncNeeded
 
         if (settingsSyncNeeded) {
             writeSettingsToStorage(activity, blinkSettings)
@@ -81,7 +102,16 @@ class SettingsPage(val activity: AppCompatActivity, val onResume: ()->Unit) {
             blinkRecreateLocationRequestClient(activity)
         }
 
-        return needToUpdateLocationSettings
+        val settingsNeedUpdatingButNoLocationRenewNeeded = syncSettingIfChanged(activity.numLogsToArmSeek.progress, blinkSettings::numLocationLogsOutToArm)
+
+        return needToUpdateLocationSettings || settingsNeedUpdatingButNoLocationRenewNeeded
+    }
+
+    private fun changeIntervalSettingsIfRequired(blinkSettings: BlinkSettings): Boolean {
+        var changeMade = syncSettingIfChanged(activity.renewSessionSeekbar.progress, blinkSettings::renewSessionIntervalInHours)
+        changeMade = syncSettingIfChanged(activity.refreshStatusSeekbar.progress, blinkSettings::refreshStatusIntervalInMinutes) || changeMade
+        syncSettingIfChanged(activity.refreshScheduleSeekbar.progress, blinkSettings::checkScheduleIntervalInMinutes)
+        return changeMade
     }
 
     private fun changeHomeSettingsIfRequired(blinkSettings: BlinkSettings) = syncSettingIfChanged(activity.homeBoundarySeekbar.progress, blinkSettings::minDistFromHome)

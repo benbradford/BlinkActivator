@@ -7,7 +7,6 @@ import java.lang.Exception
 import kotlin.reflect.KMutableProperty
 import kotlin.reflect.full.memberProperties
 import com.google.gson.Gson
-import kotlin.reflect.KProperty
 
 
 fun writeSettingsToStorage(context: Context, blinkSettings: BlinkSettings) {

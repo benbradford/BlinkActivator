@@ -18,20 +18,20 @@ enum class LocationPriority: LocationPriorityIntMap {
 
 data class BlinkSettings (
     var homeLocation: LatLng = LatLng(0.0, 0.0),
-    var minDistFromHome: Int = 158,
+    var minDistFromHome: Int = 180,
 
-    var numLocationLogsOutToArm: Int = 3,
+    var numLocationLogsOutToArm: Int = 8,
 
     var maxStatusRefreshBackoffTimeInSeconds: Int = 10,
     var maxCommandStatusCheckBackoffTimeInSeconds: Int = 10,
     var apiCallTimeoutInSeconds: Double = 10.0,
 
-    var renewSessionIntervalInMinutes: Int = 60,
-    var refreshStatusIntervalInMinutes: Int = 1,
-    var checkScheduleIntervalInMinutes: Int = 5,
+    var renewSessionIntervalInHours: Int = 3,
+    var refreshStatusIntervalInMinutes: Int = 2,
+    var checkScheduleIntervalInMinutes: Int = 7,
 
-    var locationUpdateIntervalInSeconds: Int = 10,
-    var fastestLocationUpdateIntervalInSeconds: Int = 1,
+    var locationUpdateIntervalInSeconds: Int = 13,
+    var fastestLocationUpdateIntervalInSeconds: Int = 3,
     var locationPriority: LocationPriority = LocationPriority.HIGH_ACCURACY
  )
 
