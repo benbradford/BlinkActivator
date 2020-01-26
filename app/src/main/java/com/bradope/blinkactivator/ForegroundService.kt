@@ -46,7 +46,7 @@ class ForegroundService : Service(), BlinkAccessListener {
 
     override fun onCreate() {
         super.onCreate()
-        blinkRecreateLocationRequestClient(this)
+
         Log.i(LOG_TAG, "onStartCommand for ${id}")
         blinkSetListener(this)
 
@@ -67,6 +67,7 @@ class ForegroundService : Service(), BlinkAccessListener {
             .setContentIntent(pendingIntent)
             .setDeleteIntent(deleteIntent)
             .build()
+
         startForeground(NOTIFICATION_ID, notification)
     }
 
@@ -108,7 +109,6 @@ class ForegroundService : Service(), BlinkAccessListener {
                 // notificationId is a unique int for each notification that you must define
                 notify(NOTIFICATION_ID, notification)
             }
-
     }
 
     override fun onLocationChange(location: Location) {

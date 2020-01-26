@@ -12,7 +12,7 @@
         android:layout_height="match_parent"
             android:orientation="vertical"
             android:scrollbarAlwaysDrawVerticalTrack="true"
-        android:visibility="visible">
+        android:visibility="gone">
 <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -287,7 +287,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="horizontal"
-        android:visibility="gone">
+        android:visibility="visible">
 
     <LinearLayout
         android:layout_width="fill_parent"
@@ -336,29 +336,32 @@
             </LinearLayout>
 
 
-
-
         <fragment
-            android:id="@+id/map"
-            android:name="com.google.android.gms.maps.SupportMapFragment"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            tools:context=".BlinkActivity" />
+                android:id="@+id/map"
+                android:name="com.google.android.gms.maps.SupportMapFragment"
+                android:layout_width="match_parent"
+                android:layout_height="573dp"
+                tools:context=".BlinkActivity" />
+
+
+        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_alignParentBottom="true">
+            <Button android:id="@+id/startStop"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Stop Blinko" />
+            <Button android:id="@+id/pauseButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Pause Blinko" />
+        </LinearLayout>
+    </LinearLayout>
 
 
 
     </LinearLayout>
 
-
-    </LinearLayout>
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_alignParentBottom="true">
-        <Button android:id="@+id/startStop"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Stop Blinko" />
-    </LinearLayout>
 </RelativeLayout>

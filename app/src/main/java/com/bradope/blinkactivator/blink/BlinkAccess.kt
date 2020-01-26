@@ -73,10 +73,14 @@ fun blinkInit(context: Context) {
 fun blinkPause() {
     if (blinkRequestHandler == null) return
     blinkAccessGuard!!.pauseAccess()
+    if (fusedLocationClient != null) fusedLocationClient!!.removeLocationUpdates(locationCallback)
+    fusedLocationClient = null
+
 }
 
-fun blinkResume() {
+fun blinkResume(context: Context) {
     if (blinkRequestHandler == null) return
+    createFusedLocationClient(context)
     blinkAccessGuard!!.resumeAccess()
 }
 
@@ -116,7 +120,15 @@ fun blinkQuit() {
     blinkAutomator = null
     blinkRequestHandler = null
     fusedLocationClient = null
+    blinkApi = null
+    blinkRequestHandler = null
+    blinkScheduleHandler = null
+    blinkAccessGuard = null
+    locationCallback = null
+    fusedLocationClient = null
 }
+
+fun blinkIsInitialised() = blinkRequestHandler != null
 
 fun blinkGetLastBlinkState(): BlinkArmState {
     if (blinkRequestHandler == null) {

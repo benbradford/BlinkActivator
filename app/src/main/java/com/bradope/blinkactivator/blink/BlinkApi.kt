@@ -69,7 +69,7 @@ class KHttpGetter: HttpGetter {
         data: String,
         timeout: Double
     ): HttpResponse {
-        return try {
+         try {
             val response = khttp.get(url = url, headers = headers, data = data, timeout = timeout)
             if (response.statusCode == 200)
                 return HttpResponse(
@@ -90,7 +90,7 @@ class KHttpGetter: HttpGetter {
         data: String,
         timeout: Double
     ): HttpResponse {
-        return try {
+         try {
             val response = khttp.get(url = url, headers = headers, data = data, timeout = timeout)
             if (response.statusCode == 200)
                 return HttpResponse(

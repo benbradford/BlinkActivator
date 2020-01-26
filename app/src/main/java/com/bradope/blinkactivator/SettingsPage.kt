@@ -76,7 +76,7 @@ class SettingsPage(val activity: AppCompatActivity, val onResume: ()->Unit) {
 
     private fun valueWithoutS(text: CharSequence) = text.substring(0, text.length - 1).toInt()
 
-    private fun closeSettingsMenu() {
+    fun closeSettingsMenu() {
 
         val blinkSettings = blinkGetSettings()
 

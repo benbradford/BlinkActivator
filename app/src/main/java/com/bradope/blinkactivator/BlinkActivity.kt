@@ -21,7 +21,6 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener {
 
     private val REQUEST_PERMISSIONS_REQUEST_CODE = 34
 
-    private var userQuit = false
     private var map: MapHandler? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,7 +53,7 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener {
     override fun onPause() {
         super.onPause()
         Log.i(LOG_TAG, "pause")
-        if (!userQuit)
+        if (!blinkIsUserInitiatedPause() && blinkIsInitialised())
             ForegroundService.startService(this, "service is running")
     }
 
@@ -63,13 +62,18 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener {
 
         ForegroundService.stopService(this)
         Log.i(LOG_TAG, "resume")
-        blinkRecreateLocationRequestClient(this)
+
         blinkSetListener(this)
     }
 
     override fun onDestroy() {
         super.onDestroy()
         Log.i(LOG_TAG, "onDestroy")
+    }
+
+    override fun onBackPressed() {
+        if (settingsPage != null) settingsPage!!.closeSettingsMenu()
+        else super.onBackPressed()
     }
 
     override fun onConnectToBlink(success: Boolean) {
@@ -110,7 +114,7 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener {
             blinkStatusRefresh()
         })
         startStop.setOnClickListener(View.OnClickListener {
-            userQuit = true
+
             ForegroundService.stopService(this)
             blinkQuit()
             finishAndRemoveTask()
@@ -123,7 +127,8 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener {
             map?.gotoUser()
         }
         settingsButton.setOnClickListener {
-            SettingsPage(this, {
+            settingsPage = SettingsPage(this, {
+                settingsPage = null
                 runOnUiThread {
                     settings_menu.visibility = View.GONE
                     mainScreenLayout.visibility = View.VISIBLE
@@ -132,7 +137,20 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener {
             })
 
         }
+        if (blinkIsUserInitiatedPause()) {
+            pauseButton.text = "Resume Blinko"
+        }
+        pauseButton.setOnClickListener {
+            if (pauseButton.text == "Pause Blinko") {
+                pauseButton.text = "Resume Blinko"
+                blinkPause()
+            } else {
+                pauseButton.text = "Pause Blinko"
+                blinkResume(this)
+            }
+        }
     }
+    private var settingsPage: SettingsPage? = null
 
     private fun checkPermissions(): Boolean {
         return PackageManager.PERMISSION_GRANTED == ActivityCompat.checkSelfPermission(
@@ -153,16 +171,20 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener {
     }
 
     private fun showStatus() {
-        runOnUiThread(java.lang.Runnable {
+        runOnUiThread {
             try {
                 if (blinkIsInScheduledArm()) {
                     text.setText("Blink Status: Scheduled Arm")
+                } else if (blinkIsUserInitiatedPause()) {
+                    text.setText("Blink Status: Paused")
+                    locState.setText("Location Status: Paused")
+
                 } else {
                     text.setText("Blink Status: ${blinkGetLastBlinkState().toString()}")
                 }
 
                 val lastLocation = blinkGetLastLocation()
-                if (lastLocation != null) {
+                if (lastLocation != null && !blinkIsUserInitiatedPause()) {
                     val newLoc = LatLng(lastLocation.latitude, lastLocation.longitude)
 
                     locState.setText("Location Status: ${blinkGetLastLocationState().toString()}")
@@ -172,7 +194,7 @@ class BlinkActivity : AppCompatActivity(), BlinkAccessListener {
             } catch ( e: Exception) {
                 Log.e(LOG_TAG, " e: ${e.message}")
             }
-        })
+        }
     }
 
 }

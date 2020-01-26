@@ -46,19 +46,24 @@ class MapHandler (val activity: Activity, val googleMap: GoogleMap){
     }
 
     fun updateAndDrawLocation(location: LatLng) {
-        myLocation = location
+        if (myLocation == null || (
+            location.latitude != myLocation!!.latitude ||
+            location.longitude != myLocation!!.longitude)) {
 
-        activity.runOnUiThread{
-            val options = MarkerOptions()
-                .position(location)
-                .icon(
-                    BitmapDescriptorFactory.defaultMarker(
-                        BitmapDescriptorFactory.HUE_RED
+            myLocation = location
+
+            activity.runOnUiThread {
+                val options = MarkerOptions()
+                    .position(location)
+                    .icon(
+                        BitmapDescriptorFactory.defaultMarker(
+                            BitmapDescriptorFactory.HUE_RED
+                        )
                     )
-                )
 
-            marker?.remove()
-            marker = googleMap.addMarker(options)
+                marker?.remove()
+                marker = googleMap.addMarker(options)
+            }
         }
     }
 
