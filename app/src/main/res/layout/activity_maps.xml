@@ -302,49 +302,63 @@
             android:layout_height="wrap_content"
             android:text="Location: Unknown" />
 
-            <LinearLayout
+            <RelativeLayout
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:layout_alignParentLeft="true">
+                >
 
-                <Button
+                <ImageButton
                     android:id="@+id/settingsButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                        android:scaleType="fitXY"
+                        android:layout_alignParentLeft="true"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                    android:src="@drawable/settings"/>
 
-                    android:text="Settings" />
-
-                <Button
+        <LinearLayout
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="true"
+                android:layout_marginLeft="100dp"
+                android:layout_marginRight="200dp"
+                >
+                <ImageButton
                     android:id="@+id/gotoYou"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/home" />
 
-                    android:text="Go To You" />
-
-                <Button
+                <ImageButton
                     android:id="@+id/gotoHome"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Go To Home" />
-
-                <Button
-                    android:id="@+id/button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Refresh" />
-            </LinearLayout>
+                    android:layout_width="50dp"
+                    android:layout_height="50dp"
+                        android:scaleType="fitXY"
+                    android:src="@drawable/marker" />
+        </LinearLayout>
+                <ImageButton
+                        android:id="@+id/button"
+                        android:scaleType="fitXY"
+                        android:layout_alignParentRight="true"
+                        android:layout_width="50dp"
+                        android:layout_height="50dp"
+                        android:padding="10dp"
+                        android:src="@drawable/refresh"/>
+            </RelativeLayout>
 
 
         <fragment
                 android:id="@+id/map"
                 android:name="com.google.android.gms.maps.SupportMapFragment"
                 android:layout_width="match_parent"
-                android:layout_height="573dp"
+                android:layout_height="589dp"
                 tools:context=".BlinkActivity" />
 
 
-        <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        <RelativeLayout
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
@@ -352,12 +366,17 @@
             <Button android:id="@+id/startStop"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_alignParentLeft="true"
                     android:text="Stop Blinko" />
-            <Button android:id="@+id/pauseButton"
+
+            <Button
+                    android:id="@+id/pauseButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:layout_alignParentRight="true"
                     android:text="Pause Blinko" />
-        </LinearLayout>
+        </RelativeLayout>
     </LinearLayout>
 
 
